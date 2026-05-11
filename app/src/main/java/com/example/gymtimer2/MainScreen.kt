@@ -23,6 +23,7 @@ import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.ui.screens.add_exercise.AddExerciseScreen
 import com.example.gymtimer2.ui.screens.edit_exercise.EditExerciseScreen
 import com.example.gymtimer2.ui.screens.exercise_list.ExerciseListScreen
+import com.example.gymtimer2.ui.screens.saved_songs.SavedSongsScreen
 import com.example.gymtimer2.ui.screens.song_list.MusicListScreen
 
 data class NavItem(
@@ -67,7 +68,9 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        if (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 3) exerciseToEdit = null
+        if (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 2) {
+            exerciseToEdit = null
+        }
         when (selectedIndex) {
             0 -> ExerciseListScreen(
                 modifier = Modifier.padding(innerPadding),
@@ -84,7 +87,14 @@ fun MainScreen(
                     selectedIndex = 0
                 }
             )
-            2 -> MusicListScreen()
+            2 -> SavedSongsScreen(
+                modifier = Modifier.padding(innerPadding),
+                onOpenSelection = { selectedIndex = 11 }
+            )
+            11 -> MusicListScreen(
+                modifier = Modifier.padding(innerPadding),
+                onOpenSavedSongs = { selectedIndex = 2 }
+            )
             10 -> EditExerciseScreen(
                 modifier = Modifier.padding(innerPadding),
                 exerciseToEdit = exerciseToEdit!!,

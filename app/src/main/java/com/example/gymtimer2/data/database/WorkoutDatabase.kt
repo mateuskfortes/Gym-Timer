@@ -7,6 +7,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.gymtimer2.data.entity.ExerciseEntity
 import com.example.gymtimer2.data.dao.ExerciseDao
+import com.example.gymtimer2.data.dao.SongDao
 import com.example.gymtimer2.data.entity.SongEntity
 
 @Database(
@@ -20,6 +21,8 @@ abstract class WorkoutDatabase : RoomDatabase() {
 
     abstract fun exerciseDao(): ExerciseDao
 
+    abstract fun songDao(): SongDao
+
     companion object {
         @Volatile
         private var INSTANCE: WorkoutDatabase? = null
@@ -30,7 +33,13 @@ abstract class WorkoutDatabase : RoomDatabase() {
                     context.applicationContext,
                     WorkoutDatabase::class.java,
                     "gym_timer_database"
-                ).build()
+                )
+                    // If a required migration (including downgrade) is missing,
+                    // fall back to destructive migration to avoid runtime crashes.
+                    // This will clear existing DB data. Provide explicit Migration
+                    // objects if you need to preserve data across schema changes.
+                    .fallbackToDestructiveMigration()
+                    .build()
 
                 INSTANCE = instance
                 instance

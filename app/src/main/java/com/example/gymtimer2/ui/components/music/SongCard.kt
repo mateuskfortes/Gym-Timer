@@ -1,13 +1,13 @@
-package com.example.gymtimer2.ui.screens.song_list.components
+package com.example.gymtimer2.ui.components.music
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -23,7 +23,8 @@ fun SongCard(
     song: SongModel,
     isPlaying: Boolean,
     onPlayClick: () -> Unit,
-    onOpenOverlayClick: () -> Unit
+    selected: Boolean = false,
+    onSelectionChange: ((Boolean) -> Unit)? = null,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -38,7 +39,15 @@ fun SongCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SongCover(song.coverBytes)
+                if (onSelectionChange != null) {
+                    Checkbox(
+                        checked = selected,
+                        onCheckedChange = onSelectionChange
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                }
+
+                SongCover(song.uri)
 
                 Spacer(modifier = Modifier.size(12.dp))
 
@@ -67,12 +76,6 @@ fun SongCard(
                 Button(onClick = onPlayClick) {
                     Text(if (isPlaying) "Tocando" else "Play")
                 }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Button(onClick = onOpenOverlayClick) {
-                Text("Abrir overlay")
             }
         }
     }

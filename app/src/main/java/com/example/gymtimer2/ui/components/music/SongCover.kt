@@ -1,6 +1,8 @@
-package com.example.gymtimer2.ui.screens.song_list.components
+package com.example.gymtimer2.ui.components.music
 
 import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -13,10 +15,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SongCover(coverBytes: ByteArray?) {
+fun SongCover(uri: Uri?) {
+    val context = LocalContext.current
+
+    val coverBytes = remember(uri) {
+        if (uri == null) return@remember null
+
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, uri)
+            retriever.embeddedPicture
+        } catch (_: Exception) {
+            null
+        } finally {
+            try {
+                retriever.release()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
     if (coverBytes != null) {
         val bitmap = remember(coverBytes) {
             BitmapFactory.decodeByteArray(coverBytes, 0, coverBytes.size)
