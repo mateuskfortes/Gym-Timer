@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Gym Timer</string>
+    <string name="float_timer_start_set">Iniciar serie</string>
+    <string name="float_timer_end_set">Encerrar serie</string>
+
+    <string name="no_exercise_registered">Nenhum exercício cadastrado.</string>
+    <string name="cancel_button">Cancelar</string>
+    <string name="save_button">Salvar</string>
+
+    <string name="cd_delete_exercise">Excluir exercício</string>
+    <string name="cd_edit_exercise">Editar exercício</string>
+    <string name="cd_start_exercise">Iniciar exercício</string>
+
+    <string name="add_exercise_title">Novo exercício</string>
+    <string name="add_exercise_name_label">Nome</string>
+    <string name="add_exercise_weight_label">Peso</string>
+    <string name="add_exercise_rest_label">Descanso (segundos)</string>
+
+    <string name="edit_exercise_title">Editar exercício</string>
+</resources>
