@@ -1,4 +1,4 @@
-package com.example.gymtimer2.ui.screens.song_list
+package com.example.gymtimer2.ui.screens.local_songs
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -16,14 +16,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class MusicListViewModel(
+class LocalSongsViewModel(
     private val repository: SongRepository,
     private val savedSongRepository: SavedSongRepository,
     private val playerManager: MusicPlayerManager
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SongListUiState())
-    val uiState: StateFlow<SongListUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(LocalSongsUiState())
+    val uiState: StateFlow<LocalSongsUiState> = _uiState.asStateFlow()
 
     fun loadSongs() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -117,6 +117,10 @@ class MusicListViewModel(
         _uiState.update { it.copy(playingSongId = null) }
     }
 
+    fun seekTo(positionMs: Int) {
+        playerManager.seekTo(positionMs)
+    }
+
 
     fun checkAudioPermission(context: Context): Boolean {
         val hasPermission = hasAudioPermission(context)
@@ -137,7 +141,7 @@ class MusicListViewModel(
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return MusicListViewModel(repository, savedSongRepository, playerManager) as T
+                return LocalSongsViewModel(repository, savedSongRepository, playerManager) as T
             }
         }
     }

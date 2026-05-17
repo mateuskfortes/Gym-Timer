@@ -1,8 +1,8 @@
-package com.example.gymtimer2.ui.screens.song_list
+package com.example.gymtimer2.ui.screens.local_songs
 
 import com.example.gymtimer2.domain.model.SongModel
 
-data class SongListUiState(
+data class LocalSongsUiState(
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val hasPermission: Boolean = false,

@@ -73,6 +73,7 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.9.4")
+    implementation("androidx.lifecycle:lifecycle-process:2.9.4")
 
     implementation ("androidx.room:room-runtime:2.8.3")
     ksp ("androidx.room:room-compiler:2.8.3")
@@ -80,6 +81,9 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
+    implementation("androidx.compose.material:material-icons-extended:1.7.7")
+
+    implementation("androidx.compose.material:material-icons-extended:1.7.7")
 }
 
 room {

@@ -8,5 +8,5 @@ data class SongModel(
     val artist: String,
     val uri: Uri,
     val startAtMs: Long = 0,
-    val coverBytes: ByteArray? = null
+    val durationMs: Long? = null
 )

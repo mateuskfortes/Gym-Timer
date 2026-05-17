@@ -42,6 +42,7 @@ class SongRepository(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
+                val durationMs = loadSongDuration(uri.toString())
 
                 result.add(
                     SongModel(
@@ -49,7 +50,7 @@ class SongRepository(
                         title = title,
                         artist = artist,
                         uri = uri,
-                        coverBytes = loadEmbeddedCover(uri.toString())
+                        durationMs = durationMs
                     )
                 )
             }
@@ -58,11 +59,12 @@ class SongRepository(
         return result
     }
 
-    private fun loadEmbeddedCover(uriString: String): ByteArray? {
+    private fun loadSongDuration(uriString: String): Long? {
         val retriever = MediaMetadataRetriever()
         return try {
             retriever.setDataSource(context, uriString.toUri())
-            retriever.embeddedPicture
+            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                ?.toLongOrNull()
         } catch (_: Exception) {
             null
         } finally {

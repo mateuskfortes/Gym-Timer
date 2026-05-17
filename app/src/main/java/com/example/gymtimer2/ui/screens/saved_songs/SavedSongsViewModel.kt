@@ -43,6 +43,10 @@ class SavedSongsViewModel(
         _playingSongId.value = null
     }
 
+    fun seekTo(positionMs: Int) {
+        playerManager.seekTo(positionMs)
+    }
+
 
     companion object {
         fun factory(

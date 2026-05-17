@@ -1,4 +1,4 @@
-package com.example.gymtimer2.ui.screens.song_list
+package com.example.gymtimer2.ui.screens.local_songs
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,10 +13,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,22 +25,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gymtimer2.GymApplication
 import com.example.gymtimer2.ui.components.music.MusicPermissionGate
+import com.example.gymtimer2.ui.screens.local_songs.components.SongCard
 import com.example.gymtimer2.ui.components.music.requiredAudioPermission
-import com.example.gymtimer2.ui.components.music.SongCard
 
 @Composable
-fun MusicListScreen(
+fun LocalSongsScreen(
     modifier: Modifier = Modifier,
     onOpenSavedSongs: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as GymApplication
 
-    val viewModel: MusicListViewModel = viewModel(
-        factory = MusicListViewModel.factory(
+    val viewModel: LocalSongsViewModel = viewModel(
+        factory = LocalSongsViewModel.factory(
             repository = app.container.songRepository,
             savedSongRepository = app.container.savedSongRepository,
             playerManager = app.musicPlayerManager
@@ -47,11 +51,32 @@ fun MusicListScreen(
     )
 
     val uiState by viewModel.uiState.collectAsState()
+    val playbackState by app.musicPlayerManager.playbackState.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) {
         viewModel.checkAudioPermission(context)
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    viewModel.stopPlayer()
+                }
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.stopPlayer()
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -131,6 +156,9 @@ fun MusicListScreen(
                                         selected = song.id in uiState.selectedSongIds,
                                         onSelectionChange = { viewModel.toggleSongSelection(song.id) },
                                         onPlayClick = { viewModel.playSong(context, song) },
+                                        onStopClick = viewModel::stopPlayer,
+                                        playbackState = if (uiState.playingSongId == song.id) playbackState else null,
+                                        onSeek = viewModel::seekTo,
                                     )
                                 }
                             }
@@ -141,5 +169,3 @@ fun MusicListScreen(
         }
     }
 }
-
-

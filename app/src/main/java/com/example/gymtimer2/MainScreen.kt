@@ -20,11 +20,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.ui.screens.add_exercise.AddExerciseScreen
 import com.example.gymtimer2.ui.screens.edit_exercise.EditExerciseScreen
 import com.example.gymtimer2.ui.screens.exercise_list.ExerciseListScreen
+import com.example.gymtimer2.ui.screens.edit_song_chorus.EditSongChorusScreen
 import com.example.gymtimer2.ui.screens.saved_songs.SavedSongsScreen
-import com.example.gymtimer2.ui.screens.song_list.MusicListScreen
+import com.example.gymtimer2.ui.screens.local_songs.LocalSongsScreen
 
 data class NavItem(
     val label: String,
@@ -45,6 +47,7 @@ fun MainScreen(
 
     var selectedIndex by remember { mutableIntStateOf(initialIndex) }
     var exerciseToEdit by remember { mutableStateOf<ExerciseModel?>(null) }
+    var songToEdit by remember { mutableStateOf<SongModel?>(null) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -70,6 +73,7 @@ fun MainScreen(
     ) { innerPadding ->
         if (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 2) {
             exerciseToEdit = null
+            songToEdit = null
         }
         when (selectedIndex) {
             0 -> ExerciseListScreen(
@@ -89,9 +93,13 @@ fun MainScreen(
             )
             2 -> SavedSongsScreen(
                 modifier = Modifier.padding(innerPadding),
-                onOpenSelection = { selectedIndex = 11 }
+                onOpenSelection = { selectedIndex = 11 },
+                onEditSong = { song ->
+                    songToEdit = song
+                    selectedIndex = 12
+                }
             )
-            11 -> MusicListScreen(
+            11 -> LocalSongsScreen(
                 modifier = Modifier.padding(innerPadding),
                 onOpenSavedSongs = { selectedIndex = 2 }
             )
@@ -101,6 +109,14 @@ fun MainScreen(
                 goBack = {
                     exerciseToEdit = null
                     selectedIndex = 0
+                }
+            )
+            12 -> EditSongChorusScreen(
+                modifier = Modifier.padding(innerPadding),
+                songToEdit = songToEdit!!,
+                goBack = {
+                    songToEdit = null
+                    selectedIndex = 2
                 }
             )
         }

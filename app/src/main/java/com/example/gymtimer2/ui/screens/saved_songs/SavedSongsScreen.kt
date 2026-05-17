@@ -15,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,15 +26,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gymtimer2.GymApplication
+import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.ui.components.music.MusicPermissionGate
 import com.example.gymtimer2.ui.components.music.hasAudioPermission
 import com.example.gymtimer2.ui.components.music.requiredAudioPermission
-import com.example.gymtimer2.ui.components.music.SongCard
+import com.example.gymtimer2.ui.screens.saved_songs.components.SongCard
 
 @Composable
-fun SavedSongsScreen(modifier: Modifier = Modifier, onOpenSelection: () -> Unit = {}) {
+fun SavedSongsScreen(
+    modifier: Modifier = Modifier,
+    onOpenSelection: () -> Unit = {},
+    onEditSong: (SongModel) -> Unit = {}
+) {
     val context = LocalContext.current
     val app = context.applicationContext as GymApplication
     var hasPermission by remember { mutableStateOf(hasAudioPermission(context)) }
@@ -55,8 +64,31 @@ fun SavedSongsScreen(modifier: Modifier = Modifier, onOpenSelection: () -> Unit 
         )
     )
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        onDispose {
+            viewModel.stopPlayer()
+        }
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    viewModel.stopPlayer()
+                }
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     val songs by viewModel.savedSongs.collectAsState(initial = emptyList())
     val playingSongId by viewModel.playingSongId.collectAsState()
+    val playbackState by app.musicPlayerManager.playbackState.collectAsState()
 
     Surface(modifier = modifier.fillMaxSize()) {
         MusicPermissionGate(
@@ -87,10 +119,14 @@ fun SavedSongsScreen(modifier: Modifier = Modifier, onOpenSelection: () -> Unit 
                             items = songs,
                             key = { it.id }
                         ) { song ->
-                            SongCard(
+                            SongCard (
                                 song = song,
                                 isPlaying = playingSongId == song.id,
+                                playbackState = if (playingSongId == song.id) playbackState else null,
                                 onPlayClick = { viewModel.playSong(context, song) },
+                                onStopClick = viewModel::stopPlayer,
+                                onSeek = viewModel::seekTo,
+                                onEdit = { onEditSong(song) }
                             )
                         }
                     }

@@ -8,13 +8,16 @@ import androidx.room.RoomDatabase
 import com.example.gymtimer2.data.entity.ExerciseEntity
 import com.example.gymtimer2.data.dao.ExerciseDao
 import com.example.gymtimer2.data.dao.SongDao
+import com.example.gymtimer2.data.dao.ChorusDao
 import com.example.gymtimer2.data.entity.SongEntity
+import com.example.gymtimer2.data.entity.ChorusEntity
 
 @Database(
-    entities = [ExerciseEntity::class, SongEntity::class],
-    version = 2,
+    entities = [ExerciseEntity::class, SongEntity::class, ChorusEntity::class],
+    version = 3,
     autoMigrations = [
-        AutoMigration (from = 1, to = 2)
+        AutoMigration (from = 1, to = 2),
+        AutoMigration (from = 2, to = 3)
     ],
     exportSchema = true)
 abstract class WorkoutDatabase : RoomDatabase() {
@@ -22,6 +25,8 @@ abstract class WorkoutDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao
 
     abstract fun songDao(): SongDao
+
+    abstract fun chorusDao(): ChorusDao
 
     companion object {
         @Volatile
@@ -38,7 +43,7 @@ abstract class WorkoutDatabase : RoomDatabase() {
                     // fall back to destructive migration to avoid runtime crashes.
                     // This will clear existing DB data. Provide explicit Migration
                     // objects if you need to preserve data across schema changes.
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
 
                 INSTANCE = instance

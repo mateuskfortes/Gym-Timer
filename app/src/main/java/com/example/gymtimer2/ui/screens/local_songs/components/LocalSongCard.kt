@@ -1,4 +1,4 @@
-package com.example.gymtimer2.ui.components.music
+package com.example.gymtimer2.ui.screens.local_songs.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,9 +7,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,14 +21,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.domain.model.SongModel
+import com.example.gymtimer2.domain.model.MusicPlaybackState
+import com.example.gymtimer2.ui.components.music.SongCover
 
 @Composable
 fun SongCard(
     song: SongModel,
     isPlaying: Boolean,
     onPlayClick: () -> Unit,
+    onStopClick: () -> Unit,
     selected: Boolean = false,
     onSelectionChange: ((Boolean) -> Unit)? = null,
+    playbackState: MusicPlaybackState? = null,
+    onSeek: (Int) -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -62,20 +71,37 @@ fun SongCard(
                         text = song.artist,
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    if (isPlaying) {
-                        Text(
-                            text = "Tocando",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
                 }
 
                 Spacer(modifier = Modifier.size(12.dp))
 
-                Button(onClick = onPlayClick) {
-                    Text(if (isPlaying) "Tocando" else "Play")
+                IconButton (onClick = {
+                    if (isPlaying) {
+                        onStopClick()
+                    } else {
+                        onPlayClick()
+                    }
+
+                }) {
+                    if (isPlaying) {
+                        Icon(
+                            imageVector = Icons.Filled.Pause,
+                            contentDescription = "Pausar música"
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Tocar música"
+                        )
+                    }
                 }
+            }
+
+            if (isPlaying && playbackState != null) {
+                LocalSongSeekBar(
+                    playbackState = playbackState,
+                    onSeek = onSeek
+                )
             }
         }
     }
