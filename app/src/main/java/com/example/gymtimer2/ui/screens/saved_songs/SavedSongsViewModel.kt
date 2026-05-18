@@ -9,12 +9,14 @@ import com.example.gymtimer2.data.repository.SavedSongRepository
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.player.MusicPlayerManager
 import com.example.gymtimer2.ui.components.music.hasAudioPermission
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class SavedSongsViewModel(
-    repository: SavedSongRepository,
+    private val repository: SavedSongRepository,
     private val playerManager: MusicPlayerManager
 ) : ViewModel() {
 
@@ -45,6 +47,15 @@ class SavedSongsViewModel(
 
     fun seekTo(positionMs: Int) {
         playerManager.seekTo(positionMs)
+    }
+
+    fun deleteSong(song: SongModel) {
+        if (_playingSongId.value == song.id) {
+            stopPlayer()
+        }
+        viewModelScope.launch {
+            repository.deleteSong(song)
+        }
     }
 
 

@@ -126,7 +126,8 @@ fun SavedSongsScreen(
                                 onPlayClick = { viewModel.playSong(context, song) },
                                 onStopClick = viewModel::stopPlayer,
                                 onSeek = viewModel::seekTo,
-                                onEdit = { onEditSong(song) }
+                                onEdit = { onEditSong(song) },
+                                onDelete = { viewModel.deleteSong(song) }
                             )
                         }
                     }

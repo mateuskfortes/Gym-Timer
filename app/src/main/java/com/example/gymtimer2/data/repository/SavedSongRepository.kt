@@ -19,5 +19,9 @@ class SavedSongRepository(
             songDao.insert(song.toEntity())
         }
     }
+
+    suspend fun deleteSong(song: SongModel) {
+        songDao.delete(song.toEntity())
+    }
 }
 

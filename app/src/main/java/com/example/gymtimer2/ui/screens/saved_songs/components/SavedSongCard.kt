@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -37,6 +38,7 @@ fun SongCard(
     playbackState: MusicPlaybackState? = null,
     onSeek: (Int) -> Unit,
     onEdit: (() -> Unit)? = null,
+    onDelete: (() -> Unit)? = null,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -78,34 +80,44 @@ fun SongCard(
 
                 Spacer(modifier = Modifier.size(12.dp))
 
-                IconButton (onClick = {
-                    if (isPlaying) {
-                        onStopClick()
-                    } else {
-                        onPlayClick()
+                Column {
+                    IconButton (onClick = {
+                        if (isPlaying) {
+                            onStopClick()
+                        } else {
+                            onPlayClick()
+                        }
+
+                    }) {
+                        if (isPlaying) {
+                            Icon(
+                                imageVector = Icons.Filled.Pause,
+                                contentDescription = "Pausar música"
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Tocar música"
+                            )
+                        }
                     }
 
-                }) {
-                    if (isPlaying) {
+                    if (onEdit != null) {
+                        IconButton(onClick = onEdit) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Editar música"
+                            )
+                        }
+                    }
+                    if (onDelete != null) {
+                    IconButton(onClick = onDelete) {
                         Icon(
-                            imageVector = Icons.Filled.Pause,
-                            contentDescription = "Pausar música"
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Tocar música"
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Excluir música"
                         )
                     }
                 }
-
-                if (onEdit != null) {
-                    IconButton(onClick = onEdit) {
-                        Icon(
-                            imageVector = Icons.Filled.Edit,
-                            contentDescription = "Editar música"
-                        )
-                    }
                 }
             }
 
