@@ -6,14 +6,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -26,6 +35,8 @@ import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.WeightModel
 import com.example.gymtimer2.domain.model.WeightUnit
+import com.example.gymtimer2.ui.screens.edit_exercise.components.ExerciseChorusCard
+import com.example.gymtimer2.ui.screens.edit_exercise.components.SelectChorusesModal
 
 @Composable
 fun EditExerciseScreen(
@@ -36,13 +47,41 @@ fun EditExerciseScreen(
     val context = LocalContext.current
     val app = context.applicationContext as GymApplication
     val repository = app.container.workoutRepository
+    val exerciseChorusRepository = app.container.exerciseChorusRepository
+    val chorusRepository = app.container.chorusRepository
+    val savedSongRepository = app.container.savedSongRepository
+    val playerManager = app.musicPlayerManager
 
     val viewModel: EditExerciseViewModel = viewModel(
-        factory = EditExerciseViewModel.factory(repository)
+        factory = EditExerciseViewModel.factory(
+            repository = repository,
+            exerciseChorusRepository = exerciseChorusRepository,
+            chorusRepository = chorusRepository,
+            savedSongRepository = savedSongRepository,
+            playerManager = playerManager
+        )
     )
+
+    val playbackState by viewModel.playbackState.collectAsState()
+    val associatedChoruses by viewModel.associatedChoruses.collectAsState()
+    val allSongsWithChoruses by viewModel.allSongsWithChoruses.collectAsState()
+    val selectedChorusIds by viewModel.selectedChorusIds.collectAsState()
+
+    var showSelectModal by remember { mutableStateOf(false) }
 
     LaunchedEffect(exerciseToEdit.id) {
         viewModel.loadExercise(exerciseToEdit)
+    }
+
+    if (showSelectModal) {
+        SelectChorusesModal(
+            allSongsWithChoruses = allSongsWithChoruses,
+            alreadySelectedChorusIds = selectedChorusIds,
+            onConfirm = { selectedIds ->
+                viewModel.addMultipleChorusesToExercise(selectedIds)
+            },
+            onDismiss = { showSelectModal = false }
+        )
     }
 
     Column(
@@ -88,12 +127,53 @@ fun EditExerciseScreen(
             )
         )
 
+        // Choruses section
+        HorizontalDivider()
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Refrões (${associatedChoruses.size})",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            TextButton(
+                onClick = { showSelectModal = true }
+            ) {
+                Text("+ Adicionar")
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(
+                items = associatedChoruses,
+                key = { (_, chorus) -> chorus.id }
+            ) { (song, chorus) ->
+                ExerciseChorusCard(
+                    chorus = chorus,
+                    song = song,
+                    playbackState = if (playbackState.uri == song.uri.toString()) playbackState else com.example.gymtimer2.domain.model.MusicPlaybackState(),
+                    onPlay = { viewModel.playChorus(song, chorus) },
+                    onStop = viewModel::stopPlayback,
+                    onRemove = { viewModel.removeChorusFromExercise(chorus.id) }
+                )
+            }
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             TextButton(
-                onClick = { goBack() },
+                onClick = { viewModel.discardChanges(goBack) },
                 modifier = Modifier.weight(1f)
             ) {
                 Text(stringResource(R.string.cancel_button))

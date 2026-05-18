@@ -10,21 +10,44 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.compose.saveable
+import com.example.gymtimer2.data.repository.ExerciseChorusRepository
+import com.example.gymtimer2.data.repository.SavedSongRepository
 import com.example.gymtimer2.data.repository.WorkoutRepository
+import com.example.gymtimer2.data.repository.ChorusRepository
+import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.domain.model.MusicPlaybackState
+import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.domain.model.WeightModel
 import com.example.gymtimer2.domain.model.WeightUnit
+import com.example.gymtimer2.player.MusicPlayerManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.properties.Delegates
 @OptIn(SavedStateHandleSaveableApi::class)
 class EditExerciseViewModel(
     private val savedStateHandle: SavedStateHandle,
-    private val repository: WorkoutRepository
+    private val repository: WorkoutRepository,
+    private val exerciseChorusRepository: ExerciseChorusRepository,
+    private val chorusRepository: ChorusRepository,
+    private val savedSongRepository: SavedSongRepository,
+    private val playerManager: MusicPlayerManager
 ) : ViewModel() {
 
     private var id: Int by Delegates.notNull()
 
     private var weightUnit: WeightUnit by Delegates.notNull()
+
+    private var originalName: String = ""
+
+    private var originalWeight: String = ""
+
+    private var originalRestSeconds: String = ""
+
+    private var originalChorusIds: Set<Long> = emptySet()
 
     var name by savedStateHandle.saveable { mutableStateOf("") }
         private set
@@ -35,12 +58,125 @@ class EditExerciseViewModel(
     var restSeconds by savedStateHandle.saveable { mutableStateOf("") }
         private set
 
+    private val _associatedChoruses = MutableStateFlow<List<Pair<SongModel, ChorusModel>>>(emptyList())
+    val associatedChoruses: StateFlow<List<Pair<SongModel, ChorusModel>>> = _associatedChoruses.asStateFlow()
+
+    private val _allSongs = MutableStateFlow<List<SongModel>>(emptyList())
+    val allSongs: StateFlow<List<SongModel>> = _allSongs.asStateFlow()
+
+    private val _allChoruses = MutableStateFlow<List<ChorusModel>>(emptyList())
+
+    private val _allSongsWithChoruses = MutableStateFlow<List<Pair<SongModel, List<ChorusModel>>>>(emptyList())
+    val allSongsWithChoruses: StateFlow<List<Pair<SongModel, List<ChorusModel>>>> = _allSongsWithChoruses.asStateFlow()
+
+    private val _exerciseChoruses = MutableStateFlow<List<ChorusModel>>(emptyList())
+
+    private val _selectedChorusIds = MutableStateFlow<Set<Long>>(emptySet())
+    val selectedChorusIds: StateFlow<Set<Long>> = _selectedChorusIds.asStateFlow()
+
+    val playbackState: StateFlow<MusicPlaybackState> = playerManager.playbackState
+
+    init {
+        viewModelScope.launch {
+            savedSongRepository.savedSongs.collect { songs ->
+                _allSongs.value = songs
+                refreshAssociatedChoruses()
+                refreshAllSongsWithChoruses()
+            }
+        }
+
+        viewModelScope.launch {
+            chorusRepository.getAllChoruses().collect { allChoruses ->
+                _allChoruses.value = allChoruses
+                refreshAllSongsWithChoruses()
+            }
+        }
+    }
+
     fun loadExercise(exercise: ExerciseModel) {
         id = exercise.id
         name = exercise.name
         weight = exercise.weight.value.toString()
         weightUnit = exercise.weight.unit
         restSeconds = (exercise.restPeriod / 1000).toString()
+        originalName = name
+        originalWeight = weight
+        originalRestSeconds = restSeconds
+
+        viewModelScope.launch {
+            val chorusesFlow = exerciseChorusRepository.getChorusesByExerciseId(exercise.id)
+            originalChorusIds = chorusesFlow.first().map { it.id }.toSet()
+
+            chorusesFlow.collect { choruses ->
+                _exerciseChoruses.value = choruses
+                refreshAssociatedChoruses()
+            }
+        }
+    }
+
+    fun removeChorusFromExercise(chorusId: Long) = viewModelScope.launch {
+        exerciseChorusRepository.removeChorusFromExercise(id, chorusId)
+    }
+
+    fun addMultipleChorusesToExercise(chorusIds: Set<Long>) = viewModelScope.launch {
+        val alreadyAdded = _selectedChorusIds.value
+        val newChorusIds = chorusIds - alreadyAdded
+
+        newChorusIds.forEach { chorusId ->
+            exerciseChorusRepository.addChorusToExercise(id, chorusId)
+        }
+    }
+
+    fun discardChanges(goBack: () -> Unit = {}) = viewModelScope.launch {
+        stopPlayback()
+
+        val currentChorusIds = _selectedChorusIds.value
+        val chorusIdsToRemove = currentChorusIds - originalChorusIds
+        val chorusIdsToRestore = originalChorusIds - currentChorusIds
+
+        chorusIdsToRemove.forEach { chorusId ->
+            exerciseChorusRepository.removeChorusFromExercise(id, chorusId)
+        }
+
+        chorusIdsToRestore.forEach { chorusId ->
+            exerciseChorusRepository.addChorusToExercise(id, chorusId)
+        }
+
+        name = originalName
+        weight = originalWeight
+        restSeconds = originalRestSeconds
+
+        goBack()
+    }
+
+    fun playChorus(song: SongModel, chorus: ChorusModel) {
+        playerManager.play(song.uri, chorus.startMs.toInt())
+    }
+
+    fun stopPlayback() {
+        playerManager.stop()
+    }
+
+    private fun refreshAssociatedChoruses() {
+        val songs = _allSongs.value
+        val choruses = _exerciseChoruses.value
+
+        _associatedChoruses.value = choruses.mapNotNull { chorus ->
+            songs.find { it.id == chorus.songId }?.let { song ->
+                song to chorus
+            }
+        }
+
+        _selectedChorusIds.value = choruses.map { it.id }.toSet()
+    }
+
+    private fun refreshAllSongsWithChoruses() {
+        val songs = _allSongs.value
+        val choruses = _allChoruses.value
+
+        _allSongsWithChoruses.value = songs.map { song ->
+            song to choruses.filter { it.songId == song.id }
+        }
     }
 
     fun onNameChange(value: String) {
@@ -86,12 +222,22 @@ class EditExerciseViewModel(
     }
 
     companion object {
-        fun factory(repository: WorkoutRepository): ViewModelProvider.Factory =
+        fun factory(
+            repository: WorkoutRepository,
+            exerciseChorusRepository: ExerciseChorusRepository,
+            chorusRepository: ChorusRepository,
+            savedSongRepository: SavedSongRepository,
+            playerManager: MusicPlayerManager
+        ): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
                     EditExerciseViewModel(
                         savedStateHandle = createSavedStateHandle(),
-                        repository = repository
+                        repository = repository,
+                        exerciseChorusRepository = exerciseChorusRepository,
+                        chorusRepository = chorusRepository,
+                        savedSongRepository = savedSongRepository,
+                        playerManager = playerManager
                     )
                 }
             }

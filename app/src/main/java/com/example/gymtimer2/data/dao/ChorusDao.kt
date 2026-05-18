@@ -24,6 +24,9 @@ interface ChorusDao {
     @Query("SELECT * FROM choruses WHERE song_id = :songId ORDER BY start_ms ASC")
     fun getChorusesBySongId(songId: Long): Flow<List<ChorusEntity>>
 
+    @Query("SELECT * FROM choruses ORDER BY song_id, start_ms ASC")
+    fun getAllChoruses(): Flow<List<ChorusEntity>>
+
     @Query("DELETE FROM choruses WHERE song_id = :songId")
     suspend fun deleteChorusesBySongId(songId: Long)
 

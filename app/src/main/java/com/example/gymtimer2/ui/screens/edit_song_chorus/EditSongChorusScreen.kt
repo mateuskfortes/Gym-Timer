@@ -75,6 +75,7 @@ fun EditSongChorusScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // ... existing header and controls code ...
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -165,7 +166,7 @@ fun EditSongChorusScreen(
                 Text("Adicionar refrão")
             }
 
-            if (choruses.isEmpty()) {
+            if (choruses.isEmpty() && chorusToEdit == null) {
                 Text(
                     text = "Nenhum refrão cadastrado ainda.",
                     style = MaterialTheme.typography.bodyMedium,
@@ -178,7 +179,8 @@ fun EditSongChorusScreen(
                         .weight(1f, fill = true),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(choruses, key = { it.id }) { chorus ->
+                    // Only show saved choruses (id != 0)
+                    items(choruses.filter { it.id != 0L }, key = { it.id }) { chorus ->
                         ChorusCard (
                             chorus = chorus,
                             songDurationMs = songToEdit.durationMs,

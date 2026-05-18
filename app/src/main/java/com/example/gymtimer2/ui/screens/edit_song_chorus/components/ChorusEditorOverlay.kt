@@ -144,14 +144,21 @@ fun ChorusEditorOverlay(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     TextButton(
-                        onClick = onCancel,
+                        onClick = {
+                            // Revert to original values before canceling
+                            onCancel()
+                        },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Cancelar")
                     }
 
                     Button(
-                        onClick = { onSave(chorus.copy(name = name, startMs = startMs.toLong())) },
+                        onClick = {
+                            // Only save if there are actual changes
+                            val updatedChorus = chorus.copy(name = name, startMs = startMs.toLong())
+                            onSave(updatedChorus)
+                        },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Salvar")

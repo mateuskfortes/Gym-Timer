@@ -5,19 +5,27 @@ import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.gymtimer2.data.entity.ExerciseEntity
-import com.example.gymtimer2.data.dao.ExerciseDao
-import com.example.gymtimer2.data.dao.SongDao
 import com.example.gymtimer2.data.dao.ChorusDao
-import com.example.gymtimer2.data.entity.SongEntity
+import com.example.gymtimer2.data.dao.ExerciseDao
+import com.example.gymtimer2.data.dao.ExerciseChorusDao
+import com.example.gymtimer2.data.dao.SongDao
 import com.example.gymtimer2.data.entity.ChorusEntity
+import com.example.gymtimer2.data.entity.ExerciseChorusEntity
+import com.example.gymtimer2.data.entity.ExerciseEntity
+import com.example.gymtimer2.data.entity.SongEntity
 
 @Database(
-    entities = [ExerciseEntity::class, SongEntity::class, ChorusEntity::class],
-    version = 3,
+    entities = [
+        ExerciseEntity::class,
+        SongEntity::class,
+        ChorusEntity::class,
+        ExerciseChorusEntity::class
+    ],
+    version = 4,
     autoMigrations = [
         AutoMigration (from = 1, to = 2),
-        AutoMigration (from = 2, to = 3)
+        AutoMigration (from = 2, to = 3),
+        AutoMigration (from = 3, to = 4)
     ],
     exportSchema = true)
 abstract class WorkoutDatabase : RoomDatabase() {
@@ -27,6 +35,8 @@ abstract class WorkoutDatabase : RoomDatabase() {
     abstract fun songDao(): SongDao
 
     abstract fun chorusDao(): ChorusDao
+
+    abstract fun exerciseChorusDao(): ExerciseChorusDao
 
     companion object {
         @Volatile

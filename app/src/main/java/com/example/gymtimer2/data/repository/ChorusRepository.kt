@@ -16,6 +16,12 @@ class ChorusRepository(
         }
     }
 
+    fun getAllChoruses(): Flow<List<ChorusModel>> {
+        return chorusDao.getAllChoruses().map { choruses ->
+            choruses.map { it.toDomain() }
+        }
+    }
+
     suspend fun insertChorus(chorus: ChorusModel): Long {
         return chorusDao.insert(chorus.toEntity())
     }
