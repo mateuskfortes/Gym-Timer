@@ -13,8 +13,8 @@ class WorkoutRepository(private val exerciseDao: ExerciseDao) {
         exerciseDao.getAllExercises().map { list ->
             list.map { it.toModel() }
         }
-    suspend fun insertExercise(exercise: ExerciseModel) {
-        exerciseDao.insert(exercise.toEntity())
+    suspend fun insertExercise(exercise: ExerciseModel): Long {
+        return exerciseDao.insert(exercise.toEntity())
     }
 
     suspend fun updateExercise(exercise: ExerciseModel) {

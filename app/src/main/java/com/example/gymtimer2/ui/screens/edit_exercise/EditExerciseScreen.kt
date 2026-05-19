@@ -35,8 +35,8 @@ import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.WeightModel
 import com.example.gymtimer2.domain.model.WeightUnit
-import com.example.gymtimer2.ui.screens.edit_exercise.components.ExerciseChorusCard
-import com.example.gymtimer2.ui.screens.edit_exercise.components.SelectChorusesModal
+import com.example.gymtimer2.ui.components.chorus.ExerciseChorusCard
+import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
 
 @Composable
 fun EditExerciseScreen(

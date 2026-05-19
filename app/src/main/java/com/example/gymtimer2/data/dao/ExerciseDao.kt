@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 interface ExerciseDao {
 
     @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
-    suspend fun insert(exercise: ExerciseEntity)
+    suspend fun insert(exercise: ExerciseEntity): Long
 
     @Update
     suspend fun update(exercise: ExerciseEntity)

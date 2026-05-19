@@ -12,6 +12,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -23,6 +28,7 @@ import com.example.gymtimer2.GymApplication
 import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.WeightUnit
 import com.example.gymtimer2.ui.components.WeightUnitChip
+import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
 
 @Composable
 fun AddExerciseScreen(
@@ -31,11 +37,32 @@ fun AddExerciseScreen(
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as GymApplication
-    val repository = app.container.workoutRepository
 
     val viewModel: AddExerciseViewModel = viewModel(
-        factory = AddExerciseViewModel.factory(repository)
+        factory = AddExerciseViewModel.factory(
+            repository = app.container.workoutRepository,
+            exerciseChorusRepository = app.container.exerciseChorusRepository,
+            chorusRepository = app.container.chorusRepository,
+            savedSongRepository = app.container.savedSongRepository,
+            playerManager = app.musicPlayerManager
+        )
     )
+
+    val selectedChorusIds by viewModel.selectedChorusIds.collectAsState()
+    val allSongsWithChoruses by viewModel.allSongsWithChoruses.collectAsState()
+    var showChorusModal by remember { mutableStateOf(false) }
+
+    if (showChorusModal) {
+        SelectChorusesModal(
+            allSongsWithChoruses = allSongsWithChoruses,
+            alreadySelectedChorusIds = selectedChorusIds,
+            onConfirm = { selectedIds ->
+                viewModel.addMultipleChorusesToExercise(selectedIds)
+                showChorusModal = false
+            },
+            onDismiss = { showChorusModal = false }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -94,6 +121,20 @@ fun AddExerciseScreen(
                 keyboardType = KeyboardType.Number
             )
         )
+
+        if (selectedChorusIds.isNotEmpty()) {
+            Text(
+                text = "Refrões (${selectedChorusIds.size})",
+                style = MaterialTheme.typography.titleSmall
+            )
+        }
+
+        Button(
+            onClick = { showChorusModal = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("+ Adicionar Refrão")
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
