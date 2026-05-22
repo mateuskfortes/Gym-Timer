@@ -59,7 +59,7 @@ fun SavedSongsScreen(
 
     val viewModel: SavedSongsViewModel = viewModel(
         factory = SavedSongsViewModel.factory(
-            repository = app.container.savedSongRepository,
+            repository = app.container.workoutRepository,
             playerManager = app.musicPlayerManager
         )
     )

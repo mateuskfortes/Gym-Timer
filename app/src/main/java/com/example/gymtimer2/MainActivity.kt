@@ -7,6 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import com.example.gymtimer2.controllers.canDrawOverlays
 import com.example.gymtimer2.controllers.requestOverlayPermission
 import com.example.gymtimer2.controllers.startOverlay
+import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.domain.model.WeightModel
+import com.example.gymtimer2.domain.model.WeightUnit
 import com.example.gymtimer2.ui.theme.GymTimerTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,9 +24,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             GymTimerTheme {
                 MainScreen(
-                    onOpenOverlayClick = { restTime: Long ->
+                    onOpenOverlayClick = {exercise: ExerciseModel ->
                         if (canDrawOverlays(this)) {
-                            startOverlay(this, restTime)
+                            startOverlay(this, exercise)
                         } else {
                             pendingOpenOverlay = true
                             overlayPermissionRequested = true
@@ -39,7 +42,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         if (overlayPermissionRequested && pendingOpenOverlay && canDrawOverlays(this)) {
-            startOverlay(this, 80)
+            startOverlay(this, ExerciseModel(1,"Sample Exercise", WeightModel(4, WeightUnit.TOTAL_KG), 3))
             overlayPermissionRequested = false
             pendingOpenOverlay = false
         }

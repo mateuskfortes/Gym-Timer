@@ -31,7 +31,7 @@ fun ExerciseCard(
     modifier: Modifier,
     onEdit: (ExerciseModel) -> Unit,
     onDelete: (ExerciseModel) -> Unit,
-    onStart: (Long) -> Unit
+    onStart: (ExerciseModel) -> Unit
 ) {
 
     Card(
@@ -91,7 +91,7 @@ fun ExerciseCard(
                     )
                 }
 
-                IconButton(onClick = { onStart(exercise.restPeriod) }) {
+                IconButton(onClick = { onStart(exercise) }) {
                     Icon(
                         imageVector = Icons.Filled.PlayArrow,
                         contentDescription = stringResource(R.string.cd_start_exercise)

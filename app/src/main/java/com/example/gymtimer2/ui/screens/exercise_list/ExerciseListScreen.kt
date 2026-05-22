@@ -29,7 +29,7 @@ import com.example.gymtimer2.ui.components.deleteExerciseDialog
 @Composable
 fun ExerciseListScreen(
     modifier: Modifier = Modifier,
-    onOpenOverlayClick: (Long) -> Unit,
+    onOpenOverlayClick: (ExerciseModel) -> Unit,
     onEditExercise: (ExerciseModel) -> Unit,
 
     // Just used to see preview
@@ -90,18 +90,4 @@ fun ExerciseListScreen(
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ExercisesScreenPreview() {
-    ExerciseListScreen(
-        onOpenOverlayClick = {},
-        onEditExercise = {} ,
-        exercisesPreview = listOf(
-            ExerciseModel(id = 1, name = "Supino reto", weight = WeightModel(1, WeightUnit.MACHINE_STACK_UNITS), restPeriod = 80),
-            ExerciseModel(id = 2, name = "Agachamento", weight = WeightModel(10, WeightUnit.TOTAL_KG), restPeriod = 50),
-            ExerciseModel(id = 3, name = "Levantamento terra", weight = WeightModel(100, WeightUnit.TOTAL_KG), restPeriod = 90)
-        ),
-    )
 }

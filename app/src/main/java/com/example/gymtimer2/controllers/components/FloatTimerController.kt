@@ -12,6 +12,7 @@ import android.view.View
 import android.view.WindowManager
 import com.example.gymtimer2.R
 import com.example.gymtimer2.databinding.FloatTimerBinding
+import com.example.gymtimer2.domain.model.ExerciseModel
 import java.util.Locale
 import kotlin.math.abs
 
@@ -22,7 +23,7 @@ class FloatTimerController {
     private val context: Context
     private val inflater: LayoutInflater
     private val windowManager: WindowManager
-    private val restTime: Long
+    private val exercise: ExerciseModel
     private val onClose: () -> Unit
     private val removeAreaController: RemoveAreaController
     private lateinit var binding: FloatTimerBinding
@@ -35,13 +36,13 @@ class FloatTimerController {
         context: Context,
         inflater: LayoutInflater,
         windowManager: WindowManager,
-        restTime: Long,
+        exercise: ExerciseModel,
         onClose: () -> Unit
     ){
         this.windowManager = windowManager
         this.inflater = inflater
         this.context = context
-        this.restTime = restTime // Rest time in seconds
+        this.exercise = exercise
         this.onClose = onClose
         removeAreaController = RemoveAreaController(
             context,
@@ -105,7 +106,7 @@ class FloatTimerController {
         binding.timer.scaleX = 2.1f
         binding.timer.scaleY = 2.1f
 
-        countDownTimer = object : CountDownTimer(restTime, 1000L) {
+        countDownTimer = object : CountDownTimer(exercise.restPeriod, 1000L) {
             override fun onTick(millisUntilFinished: Long) {
                 val totalSeconds = millisUntilFinished / 1000
                 val minutes = totalSeconds / 60
@@ -224,7 +225,7 @@ class FloatTimerController {
     fun show() {
         if (!isFloatTimerAttached) {
             windowManager.addView(binding.root, layoutParams)
-            binding.timer.text = context.getString(R.string.float_timer_start_set)
+            binding.timer.text = context.getString(R.string.float_timer_start_set) + " - " + exercise.name
             isFloatTimerAttached = true
         }
     }

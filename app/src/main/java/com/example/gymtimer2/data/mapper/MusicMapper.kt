@@ -10,7 +10,6 @@ fun SongEntity.toDomain(): SongModel {
         title = title,
         artist = artist,
         uri = uri.toUri(),
-        startAtMs = startAtMs,
         durationMs = durationMs
     )
 }
@@ -21,7 +20,6 @@ fun SongModel.toEntity(): SongEntity {
         title = title,
         artist = artist,
         uri = uri.toString(),
-        durationMs = durationMs,
-        startAtMs = startAtMs
+        durationMs = durationMs
     )
 }

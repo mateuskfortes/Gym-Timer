@@ -49,7 +49,7 @@ fun EditSongChorusScreen(
     val app = context.applicationContext as GymApplication
     val viewModel: EditSongChorusViewModel = viewModel(
         factory = EditSongChorusViewModel.factory(
-            repository = app.container.chorusRepository,
+            repository = app.container.workoutRepository,
             playerManager = app.musicPlayerManager
         )
     )

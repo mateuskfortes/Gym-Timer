@@ -1,9 +1,11 @@
 package com.example.gymtimer2.domain.model
 
+import java.io.Serializable
+
 enum class WeightUnit(
     val code: Int,
     val label: String
-) {
+): Serializable {
     TOTAL_KG(0, "kg"),
     MACHINE_STACK_UNITS(1, "slots");
 

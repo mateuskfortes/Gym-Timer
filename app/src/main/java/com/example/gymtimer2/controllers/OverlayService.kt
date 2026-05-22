@@ -12,6 +12,8 @@ import androidx.core.app.NotificationCompat
 import com.example.gymtimer2.MainActivity
 import com.example.gymtimer2.R
 import com.example.gymtimer2.controllers.components.FloatTimerController
+import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.util.extensions.serializable
 
 class OverlayService : Service() {
     companion object {
@@ -33,19 +35,19 @@ class OverlayService : Service() {
         startAsForeground()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val restTime: Long = intent?.getLongExtra(EXTRA_REST_SECONDS, 80L) ?: 80L
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        val exercise = intent.serializable<ExerciseModel>(EXTRA_EXERCISE)!!
 
         floatTimerController = FloatTimerController(
             applicationContext,
             getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater,
             getWindowManager(),
-            restTime,
+            exercise,
             onClose = { stopService() }
         )
 
         floatTimerController.show()
-        return START_STICKY
+        return START_REDELIVER_INTENT
     }
 
     override fun onDestroy() {

@@ -4,8 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.gymtimer2.data.repository.SongRepository
-import com.example.gymtimer2.data.repository.SavedSongRepository
+import com.example.gymtimer2.data.repository.WorkoutRepository
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.player.MusicPlayerManager
 import com.example.gymtimer2.ui.components.music.hasAudioPermission
@@ -17,8 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class LocalSongsViewModel(
-    private val repository: SongRepository,
-    private val savedSongRepository: SavedSongRepository,
+    private val repository: WorkoutRepository,
     private val playerManager: MusicPlayerManager
 ) : ViewModel() {
 
@@ -74,7 +72,7 @@ class LocalSongsViewModel(
             _uiState.update { it.copy(isSaving = true, error = null) }
 
             runCatching {
-                savedSongRepository.saveSongs(songsToSave)
+                repository.saveSongs(songsToSave)
             }.onSuccess {
                 _uiState.update { state ->
                     state.copy(
@@ -102,7 +100,7 @@ class LocalSongsViewModel(
         }
 
         runCatching {
-            playerManager.play(song.uri, song.startAtMs.toInt())
+            playerManager.play(song.uri)
         }.onSuccess {
             _uiState.update { it.copy(playingSongId = song.id, error = null) }
         }.onFailure { throwable ->
@@ -135,13 +133,12 @@ class LocalSongsViewModel(
 
     companion object {
         fun factory(
-            repository: SongRepository,
-            savedSongRepository: SavedSongRepository,
+            repository: WorkoutRepository,
             playerManager: MusicPlayerManager
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return LocalSongsViewModel(repository, savedSongRepository, playerManager) as T
+                return LocalSongsViewModel(repository, playerManager) as T
             }
         }
     }

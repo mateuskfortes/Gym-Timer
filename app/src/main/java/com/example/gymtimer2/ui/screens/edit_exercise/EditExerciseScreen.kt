@@ -47,17 +47,11 @@ fun EditExerciseScreen(
     val context = LocalContext.current
     val app = context.applicationContext as GymApplication
     val repository = app.container.workoutRepository
-    val exerciseChorusRepository = app.container.exerciseChorusRepository
-    val chorusRepository = app.container.chorusRepository
-    val savedSongRepository = app.container.savedSongRepository
     val playerManager = app.musicPlayerManager
 
     val viewModel: EditExerciseViewModel = viewModel(
         factory = EditExerciseViewModel.factory(
             repository = repository,
-            exerciseChorusRepository = exerciseChorusRepository,
-            chorusRepository = chorusRepository,
-            savedSongRepository = savedSongRepository,
             playerManager = playerManager
         )
     )

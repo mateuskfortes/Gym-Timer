@@ -35,7 +35,7 @@ data class NavItem(
 
 @Composable
 fun MainScreen(
-    onOpenOverlayClick: (Long) -> Unit,
+    onOpenOverlayClick: (ExerciseModel) -> Unit,
     modifier: Modifier = Modifier,
     initialIndex: Int = 0
 ) {

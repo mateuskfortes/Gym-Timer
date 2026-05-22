@@ -3,7 +3,7 @@ package com.example.gymtimer2.ui.screens.edit_song_chorus
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.gymtimer2.data.repository.ChorusRepository
+import com.example.gymtimer2.data.repository.WorkoutRepository
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.player.MusicPlayerManager
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class EditSongChorusViewModel(
-    private val repository: ChorusRepository,
+    private val repository: WorkoutRepository,
     private val playerManager: MusicPlayerManager
 ) : ViewModel() {
 
@@ -96,7 +96,7 @@ class EditSongChorusViewModel(
 
     companion object {
         fun factory(
-            repository: ChorusRepository,
+            repository: WorkoutRepository,
             playerManager: MusicPlayerManager
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")

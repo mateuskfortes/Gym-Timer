@@ -23,8 +23,4 @@ data class SongEntity (
 
     @ColumnInfo(name = "album")
     val album: String? = null,
-
-
-    @ColumnInfo(name = "start_at_ms", defaultValue = "0")
-    val startAtMs: Long = 0
 )

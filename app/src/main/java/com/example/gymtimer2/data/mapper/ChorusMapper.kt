@@ -3,7 +3,7 @@ package com.example.gymtimer2.data.mapper
 import com.example.gymtimer2.data.entity.ChorusEntity
 import com.example.gymtimer2.domain.model.ChorusModel
 
-fun ChorusEntity.toDomain(): ChorusModel {
+fun ChorusEntity.toModel(): ChorusModel {
     return ChorusModel(
         id = id,
         songId = songId,

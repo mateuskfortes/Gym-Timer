@@ -7,6 +7,5 @@ data class SongModel(
     val title: String,
     val artist: String,
     val uri: Uri,
-    val startAtMs: Long = 0,
     val durationMs: Long? = null
 )

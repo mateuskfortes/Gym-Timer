@@ -1,6 +1,7 @@
 package com.example.gymtimer2.data.mapper
 
 import com.example.gymtimer2.data.entity.ExerciseEntity
+import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.WeightModel
 import com.example.gymtimer2.domain.model.WeightUnit
@@ -13,7 +14,7 @@ fun ExerciseEntity.toModel(): ExerciseModel {
             value = weight,
             unit = WeightUnit.fromCode(weightUnitCode)
         ),
-        restPeriod = restPeriod
+        restPeriod = restPeriod,
     )
 }
 

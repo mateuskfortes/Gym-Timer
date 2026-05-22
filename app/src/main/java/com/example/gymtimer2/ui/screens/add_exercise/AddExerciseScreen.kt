@@ -41,9 +41,6 @@ fun AddExerciseScreen(
     val viewModel: AddExerciseViewModel = viewModel(
         factory = AddExerciseViewModel.factory(
             repository = app.container.workoutRepository,
-            exerciseChorusRepository = app.container.exerciseChorusRepository,
-            chorusRepository = app.container.chorusRepository,
-            savedSongRepository = app.container.savedSongRepository,
             playerManager = app.musicPlayerManager
         )
     )

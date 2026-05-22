@@ -44,8 +44,7 @@ fun LocalSongsScreen(
 
     val viewModel: LocalSongsViewModel = viewModel(
         factory = LocalSongsViewModel.factory(
-            repository = app.container.songRepository,
-            savedSongRepository = app.container.savedSongRepository,
+            repository = app.container.workoutRepository,
             playerManager = app.musicPlayerManager
         )
     )

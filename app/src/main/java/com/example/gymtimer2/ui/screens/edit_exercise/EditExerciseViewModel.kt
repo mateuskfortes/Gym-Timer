@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.example.gymtimer2.ui.screens.edit_exercise
 
 import androidx.compose.runtime.mutableStateOf
@@ -10,10 +12,7 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.compose.saveable
-import com.example.gymtimer2.data.repository.ExerciseChorusRepository
-import com.example.gymtimer2.data.repository.SavedSongRepository
 import com.example.gymtimer2.data.repository.WorkoutRepository
-import com.example.gymtimer2.data.repository.ChorusRepository
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
@@ -27,13 +26,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.properties.Delegates
+
 @OptIn(SavedStateHandleSaveableApi::class)
 class EditExerciseViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val repository: WorkoutRepository,
-    private val exerciseChorusRepository: ExerciseChorusRepository,
-    private val chorusRepository: ChorusRepository,
-    private val savedSongRepository: SavedSongRepository,
     private val playerManager: MusicPlayerManager
 ) : ViewModel() {
 
@@ -78,7 +75,7 @@ class EditExerciseViewModel(
 
     init {
         viewModelScope.launch {
-            savedSongRepository.savedSongs.collect { songs ->
+            repository.savedSongs.collect { songs ->
                 _allSongs.value = songs
                 refreshAssociatedChoruses()
                 refreshAllSongsWithChoruses()
@@ -86,7 +83,7 @@ class EditExerciseViewModel(
         }
 
         viewModelScope.launch {
-            chorusRepository.getAllChoruses().collect { allChoruses ->
+            repository.getAllChoruses().collect { allChoruses ->
                 _allChoruses.value = allChoruses
                 refreshAllSongsWithChoruses()
             }
@@ -104,7 +101,7 @@ class EditExerciseViewModel(
         originalRestSeconds = restSeconds
 
         viewModelScope.launch {
-            val chorusesFlow = exerciseChorusRepository.getChorusesByExerciseId(exercise.id)
+            val chorusesFlow = repository.getChorusesByExerciseId(exercise.id)
             originalChorusIds = chorusesFlow.first().map { it.id }.toSet()
 
             chorusesFlow.collect { choruses ->
@@ -115,7 +112,7 @@ class EditExerciseViewModel(
     }
 
     fun removeChorusFromExercise(chorusId: Long) = viewModelScope.launch {
-        exerciseChorusRepository.removeChorusFromExercise(id, chorusId)
+        repository.removeChorusFromExercise(id, chorusId)
     }
 
     fun addMultipleChorusesToExercise(chorusIds: Set<Long>) = viewModelScope.launch {
@@ -123,7 +120,7 @@ class EditExerciseViewModel(
         val newChorusIds = chorusIds - alreadyAdded
 
         newChorusIds.forEach { chorusId ->
-            exerciseChorusRepository.addChorusToExercise(id, chorusId)
+            repository.addChorusToExercise(id, chorusId)
         }
     }
 
@@ -135,11 +132,11 @@ class EditExerciseViewModel(
         val chorusIdsToRestore = originalChorusIds - currentChorusIds
 
         chorusIdsToRemove.forEach { chorusId ->
-            exerciseChorusRepository.removeChorusFromExercise(id, chorusId)
+            repository.removeChorusFromExercise(id, chorusId)
         }
 
         chorusIdsToRestore.forEach { chorusId ->
-            exerciseChorusRepository.addChorusToExercise(id, chorusId)
+            repository.addChorusToExercise(id, chorusId)
         }
 
         name = originalName
@@ -224,9 +221,6 @@ class EditExerciseViewModel(
     companion object {
         fun factory(
             repository: WorkoutRepository,
-            exerciseChorusRepository: ExerciseChorusRepository,
-            chorusRepository: ChorusRepository,
-            savedSongRepository: SavedSongRepository,
             playerManager: MusicPlayerManager
         ): ViewModelProvider.Factory =
             viewModelFactory {
@@ -234,9 +228,6 @@ class EditExerciseViewModel(
                     EditExerciseViewModel(
                         savedStateHandle = createSavedStateHandle(),
                         repository = repository,
-                        exerciseChorusRepository = exerciseChorusRepository,
-                        chorusRepository = chorusRepository,
-                        savedSongRepository = savedSongRepository,
                         playerManager = playerManager
                     )
                 }

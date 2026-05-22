@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.gymtimer2.data.repository.SavedSongRepository
+import com.example.gymtimer2.data.repository.WorkoutRepository
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.player.MusicPlayerManager
 import com.example.gymtimer2.ui.components.music.hasAudioPermission
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class SavedSongsViewModel(
-    private val repository: SavedSongRepository,
+    private val repository: WorkoutRepository,
     private val playerManager: MusicPlayerManager
 ) : ViewModel() {
 
@@ -32,7 +32,7 @@ class SavedSongsViewModel(
         }
 
         runCatching {
-            playerManager.play(song.uri, song.startAtMs.toInt())
+            playerManager.play(song.uri)
         }.onSuccess {
             _playingSongId.value = song.id
         }.onFailure {
@@ -61,7 +61,7 @@ class SavedSongsViewModel(
 
     companion object {
         fun factory(
-            repository: SavedSongRepository,
+            repository: WorkoutRepository,
             playerManager: MusicPlayerManager
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
