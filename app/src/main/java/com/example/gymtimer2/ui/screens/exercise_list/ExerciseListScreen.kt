@@ -27,7 +27,7 @@ import com.example.gymtimer2.ui.components.deleteExerciseDialog
 @Composable
 fun ExerciseListScreen(
     modifier: Modifier = Modifier,
-    onOpenOverlayClick: (ExerciseModel, List<ChorusWithSongModel>) -> Unit,
+    onOpenOverlayClick: (Int) -> Unit,
     onEditExercise: (ExerciseModel) -> Unit,
 
     // Just used to see preview

@@ -184,12 +184,3 @@ fun EditExerciseScreen(
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun EditExerciseScreenPreview() {
-    EditExerciseScreen(
-        exerciseToEdit = ExerciseModel(id = 1, name = "Supino reto", weight = WeightModel(20, WeightUnit.MACHINE_STACK_UNITS), restPeriod = 4999),
-        goBack = {}
-    )
-}

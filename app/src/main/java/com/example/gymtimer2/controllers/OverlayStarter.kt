@@ -7,15 +7,13 @@ import android.provider.Settings
 import com.example.gymtimer2.domain.model.ChorusWithSongModel
 import com.example.gymtimer2.domain.model.ExerciseModel
 
-const val EXTRA_EXERCISE = "EXTRA_EXERCISE"
-const val EXTRA_CHORUS = "EXTRA_CHORUS"
-fun startOverlay(context: Context, exercise: ExerciseModel, choruses: List<ChorusWithSongModel>) {
+const val EXTRA_EXERCISE_ID = "EXERCISE_ID"
+fun startOverlay(context: Context, exerciseId: Int) {
     if (OverlayService.isRunning) return
 
     if (Settings.canDrawOverlays(context)) {
         val intent = Intent(context, OverlayService::class.java).apply {
-            putExtra(EXTRA_EXERCISE, exercise)
-            putExtra(EXTRA_CHORUS, ArrayList(choruses))
+            putExtra(EXTRA_EXERCISE_ID, exerciseId)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent)

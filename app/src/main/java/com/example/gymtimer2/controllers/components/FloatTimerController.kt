@@ -10,15 +10,18 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import androidx.core.net.toUri
 import com.example.gymtimer2.GymApplication
 import com.example.gymtimer2.R
+import com.example.gymtimer2.data.repository.WorkoutRepository
 import com.example.gymtimer2.databinding.FloatTimerBinding
-import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.ChorusWithSongModel
 import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.domain.model.ExerciseWithChorusesModel
 import com.example.gymtimer2.player.MusicPlayerManager
 import com.example.gymtimer2.ui.components.music.hasAudioPermission
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.abs
 
@@ -29,34 +32,41 @@ class FloatTimerController {
     private val context: Context
     private val inflater: LayoutInflater
     private val windowManager: WindowManager
-    private val exercise: ExerciseModel
-    private val choruses: List<ChorusWithSongModel>
+    private lateinit var workoutExercise: ExerciseWithChorusesModel
     private val onClose: () -> Unit
     private val removeAreaController: RemoveAreaController
     private val playerManager: MusicPlayerManager
+    private val repository: WorkoutRepository
     private lateinit var binding: FloatTimerBinding
     private lateinit var layoutParams: WindowManager.LayoutParams
     private var isFloatTimerAttached = false
     private var countDownTimer: CountDownTimer? = null
     private var isInSet: Boolean = false
+    private val scope = CoroutineScope(Dispatchers.Main)
 
     constructor(
         context: Context,
         inflater: LayoutInflater,
         windowManager: WindowManager,
-        exercise: ExerciseModel,
-        choruses: List<ChorusWithSongModel>,
+        exerciseId: Int,
         onClose: () -> Unit
     ){
         this.windowManager = windowManager
         this.inflater = inflater
         this.context = context
-        this.exercise = exercise
-        this.choruses = choruses
         this.onClose = onClose
 
         val app = context.applicationContext as GymApplication
         this.playerManager = app.musicPlayerManager
+        this.repository = app.container.workoutRepository
+
+        scope.launch {
+            repository
+                .getExerciseWithChorusesByExerciseId(exerciseId)
+                .collect { value ->
+                    workoutExercise = value
+                }
+        }
 
         this.removeAreaController = RemoveAreaController(
             context,
@@ -113,7 +123,7 @@ class FloatTimerController {
                 isInSet = true
                 stopTimer()
                 binding.timer.text = context.getString(R.string.float_timer_end_set)
-                val randomChorus = choruses.randomOrNull()
+                val randomChorus = workoutExercise.choruses.randomOrNull()
 
                 // Play Song chorus
                 randomChorus?.let {
@@ -136,7 +146,7 @@ class FloatTimerController {
         binding.timer.scaleX = 2.1f
         binding.timer.scaleY = 2.1f
 
-        countDownTimer = object : CountDownTimer(exercise.restPeriod, 1000L) {
+        countDownTimer = object : CountDownTimer(workoutExercise.exercise.restPeriod, 1000L) {
             override fun onTick(millisUntilFinished: Long) {
                 val totalSeconds = millisUntilFinished / 1000
                 val minutes = totalSeconds / 60

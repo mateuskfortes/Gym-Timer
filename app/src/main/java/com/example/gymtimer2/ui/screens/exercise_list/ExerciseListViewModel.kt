@@ -25,14 +25,9 @@ class ExerciseListViewModel(
 
     fun startExercise(
         exercise: ExerciseModel,
-        onOpen: (ExerciseModel, List<ChorusWithSongModel>) -> Unit
+        onOpen: (Int) -> Unit
     ) {
-        viewModelScope.launch {
-            val choruses =
-                repository.getChorusesWithSongsByExerciseId(exercise.id).first()
-
-            onOpen(exercise, choruses)
-        }
+        onOpen(exercise.id)
     }
 
     companion object {

@@ -12,9 +12,6 @@ import androidx.core.app.NotificationCompat
 import com.example.gymtimer2.MainActivity
 import com.example.gymtimer2.R
 import com.example.gymtimer2.controllers.components.FloatTimerController
-import com.example.gymtimer2.domain.model.ChorusWithSongModel
-import com.example.gymtimer2.domain.model.ExerciseModel
-import com.example.gymtimer2.util.extensions.serializable
 
 class OverlayService : Service() {
     companion object {
@@ -37,15 +34,12 @@ class OverlayService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        val exercise = intent.serializable<ExerciseModel>(EXTRA_EXERCISE)!!
-        val choruses = intent.serializable<ArrayList<ChorusWithSongModel>>(EXTRA_CHORUS) ?: arrayListOf()
-
+        val exerciseId = intent.getIntExtra(EXTRA_EXERCISE_ID, -1)
         floatTimerController = FloatTimerController(
             applicationContext,
             getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater,
             getWindowManager(),
-            exercise,
-            choruses,
+            exerciseId,
             onClose = { stopService() }
         )
 

@@ -36,7 +36,7 @@ data class NavItem(
 
 @Composable
 fun MainScreen(
-    onOpenOverlayClick: (ExerciseModel, List<ChorusWithSongModel>) -> Unit,
+    onOpenOverlayClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
     initialIndex: Int = 0
 ) {

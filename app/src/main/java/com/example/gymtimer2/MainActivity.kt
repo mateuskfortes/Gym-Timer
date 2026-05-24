@@ -25,9 +25,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             GymTimerTheme {
                 MainScreen(
-                    onOpenOverlayClick = {exercise: ExerciseModel, choruses: List<ChorusWithSongModel> ->
+                    onOpenOverlayClick = {exerciseId: Int ->
                         if (canDrawOverlays(this)) {
-                            startOverlay(this, exercise, choruses)
+                            startOverlay(this, exerciseId)
                         } else {
                             pendingOpenOverlay = true
                             overlayPermissionRequested = true
@@ -43,8 +43,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         if (overlayPermissionRequested && pendingOpenOverlay && canDrawOverlays(this)) {
-            startOverlay(this, ExerciseModel(1,"Sample Exercise", WeightModel(4, WeightUnit.TOTAL_KG), 3),
-                listOf<ChorusWithSongModel>()
+            startOverlay(this, 1
             )
             overlayPermissionRequested = false
             pendingOpenOverlay = false

@@ -20,9 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
+import com.example.gymtimer2.ui.components.music.MusicSeekBar
 import com.example.gymtimer2.ui.components.music.SongCover
 
 @Composable
@@ -99,7 +99,7 @@ fun SongCard(
             }
 
             if (isPlaying && playbackState != null) {
-                LocalSongSeekBar(
+                MusicSeekBar(
                     playbackState = playbackState,
                     onSeek = onSeek
                 )

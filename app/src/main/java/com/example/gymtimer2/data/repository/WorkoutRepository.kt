@@ -12,11 +12,14 @@ import com.example.gymtimer2.data.dao.SongDao
 import com.example.gymtimer2.data.entity.ExerciseChorusEntity
 import com.example.gymtimer2.data.mapper.toEntity
 import com.example.gymtimer2.data.mapper.toModel
+import com.example.gymtimer2.data.relation.ExerciseWithChorusesRelation
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.ChorusWithSongModel
 import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.domain.model.ExerciseWithChorusesModel
 import com.example.gymtimer2.domain.model.SongModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class WorkoutRepository(
@@ -177,11 +180,7 @@ class WorkoutRepository(
         }
     }
 
-    suspend fun removeAllChorusesFromExercise(exerciseId: Int) {
-        exerciseChorusDao.deleteByExerciseId(exerciseId)
-    }
-
-    suspend fun removeAllExercisesFromChorus(chorusId: Long) {
-        exerciseChorusDao.deleteByChorusId(chorusId)
+    fun getExerciseWithChorusesByExerciseId(exerciseId: Int): Flow<ExerciseWithChorusesModel> {
+        return chorusDao.getExerciseWithChorusesByExerciseId(exerciseId).map { it.toModel() }
     }
 }
