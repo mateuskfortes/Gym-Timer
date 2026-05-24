@@ -1,5 +1,6 @@
 package com.example.gymtimer2.ui.screens.edit_song_chorus
 
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -28,15 +29,15 @@ class EditSongChorusViewModel(
     }
 
     fun playFullSong(song: SongModel) {
-        playerManager.play(song.uri, 0)
+        playerManager.play(song.uriString, 0)
     }
 
     fun playChorus(song: SongModel, chorus: ChorusModel) {
-        playerManager.play(song.uri, chorus.startMs.toInt())
+        playerManager.play(song.uriString, chorus.startMs.toInt())
     }
 
     fun playChorusPreview(song: SongModel, startMs: Long) {
-        playerManager.play(song.uri, startMs.toInt())
+        playerManager.play(song.uriString, startMs.toInt())
     }
 
     fun stopPlayback() {

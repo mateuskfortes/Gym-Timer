@@ -3,6 +3,7 @@
 package com.example.gymtimer2.ui.screens.edit_exercise
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -147,7 +148,7 @@ class EditExerciseViewModel(
     }
 
     fun playChorus(song: SongModel, chorus: ChorusModel) {
-        playerManager.play(song.uri, chorus.startMs.toInt())
+        playerManager.play(song.uriString, chorus.startMs.toInt())
     }
 
     fun stopPlayback() {

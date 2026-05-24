@@ -3,6 +3,7 @@ package com.example.gymtimer2.player
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
+import androidx.core.net.toUri
 import com.example.gymtimer2.domain.model.MusicPlaybackState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,11 +28,11 @@ class MusicPlayerManager(
     private val _playbackState = MutableStateFlow(MusicPlaybackState())
     val playbackState: StateFlow<MusicPlaybackState> = _playbackState.asStateFlow()
 
-    fun play(uri: Uri, startAtMs: Int = 0, playForMs: Int? = null) {
+    fun play(uri: String, startAtMs: Int = 0, playForMs: Int? = null) {
         stopInternal()
 
         mediaPlayer = MediaPlayer().apply {
-            setDataSource(context, uri)
+            setDataSource(context, uri.toUri())
             prepare()
 
             val safeStartAt = minOf(startAtMs, duration)
@@ -45,8 +46,8 @@ class MusicPlayerManager(
             start()
         }
 
-        updatePlaybackState(uri.toString(), mediaPlayer?.currentPosition ?: 0, mediaPlayer?.duration ?: 0, true)
-        startProgressUpdates(uri)
+        updatePlaybackState(uri, mediaPlayer?.currentPosition ?: 0, mediaPlayer?.duration ?: 0, true)
+        startProgressUpdates(uri.toUri())
     }
 
     fun stop() {

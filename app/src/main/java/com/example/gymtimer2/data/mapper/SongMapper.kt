@@ -4,12 +4,12 @@ import androidx.core.net.toUri
 import com.example.gymtimer2.data.entity.SongEntity
 import com.example.gymtimer2.domain.model.SongModel
 
-fun SongEntity.toDomain(): SongModel {
+fun SongEntity.toModel(): SongModel {
     return SongModel(
         id = id,
         title = title,
         artist = artist,
-        uri = uri.toUri(),
+        uriString = uri,
         durationMs = durationMs
     )
 }
@@ -19,7 +19,7 @@ fun SongModel.toEntity(): SongEntity {
         id = id,
         title = title,
         artist = artist,
-        uri = uri.toString(),
+        uri = uriString,
         durationMs = durationMs
     )
 }

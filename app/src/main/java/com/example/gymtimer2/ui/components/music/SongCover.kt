@@ -2,7 +2,6 @@ package com.example.gymtimer2.ui.components.music
 
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,9 +17,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 
 @Composable
-fun SongCover(uri: Uri?) {
+fun SongCover(uri: String?) {
     val context = LocalContext.current
 
     val coverBytes = remember(uri) {
@@ -28,7 +28,7 @@ fun SongCover(uri: Uri?) {
 
         val retriever = MediaMetadataRetriever()
         try {
-            retriever.setDataSource(context, uri)
+            retriever.setDataSource(context, uri.toUri())
             retriever.embeddedPicture
         } catch (_: Exception) {
             null

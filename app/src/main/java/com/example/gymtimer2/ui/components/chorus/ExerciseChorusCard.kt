@@ -33,7 +33,7 @@ fun ExerciseChorusCard(
     onStop: () -> Unit,
     onRemove: () -> Unit
 ) {
-    val isChorusPlaying = playbackState.isPlaying && playbackState.uri == song.uri.toString()
+    val isChorusPlaying = playbackState.isPlaying && playbackState.uri == song.uriString
 
     Card(
         modifier = Modifier.fillMaxWidth(),

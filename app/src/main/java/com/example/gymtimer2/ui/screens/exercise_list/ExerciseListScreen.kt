@@ -15,21 +15,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gymtimer2.GymApplication
 import com.example.gymtimer2.R
+import com.example.gymtimer2.domain.model.ChorusWithSongModel
 import com.example.gymtimer2.domain.model.ExerciseModel
-import com.example.gymtimer2.domain.model.WeightModel
-import com.example.gymtimer2.domain.model.WeightUnit
 import com.example.gymtimer2.ui.components.ExerciseCard
 import com.example.gymtimer2.ui.components.deleteExerciseDialog
 
 @Composable
 fun ExerciseListScreen(
     modifier: Modifier = Modifier,
-    onOpenOverlayClick: (ExerciseModel) -> Unit,
+    onOpenOverlayClick: (ExerciseModel, List<ChorusWithSongModel>) -> Unit,
     onEditExercise: (ExerciseModel) -> Unit,
 
     // Just used to see preview
@@ -84,7 +82,12 @@ fun ExerciseListScreen(
                             }
 
                         },
-                        onStart = onOpenOverlayClick
+                        onStart = {
+                            viewModel.startExercise(
+                                exercise = exercise,
+                                onOpen = onOpenOverlayClick
+                            )
+                        }
                     )
                 }
             }

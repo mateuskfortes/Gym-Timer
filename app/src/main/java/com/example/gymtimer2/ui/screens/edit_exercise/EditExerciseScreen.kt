@@ -154,7 +154,7 @@ fun EditExerciseScreen(
                 ExerciseChorusCard(
                     chorus = chorus,
                     song = song,
-                    playbackState = if (playbackState.uri == song.uri.toString()) playbackState else com.example.gymtimer2.domain.model.MusicPlaybackState(),
+                    playbackState = if (playbackState.uri == song.uriString) playbackState else com.example.gymtimer2.domain.model.MusicPlaybackState(),
                     onPlay = { viewModel.playChorus(song, chorus) },
                     onStop = viewModel::stopPlayback,
                     onRemove = { viewModel.removeChorusFromExercise(chorus.id) }

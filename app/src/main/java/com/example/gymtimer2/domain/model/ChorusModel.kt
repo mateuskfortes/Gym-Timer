@@ -8,4 +8,3 @@ data class ChorusModel(
     val name: String = "",
     val startMs: Long
 ): Serializable
-

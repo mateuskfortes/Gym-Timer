@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.gymtimer2.domain.model.ChorusWithSongModel
 import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.ui.screens.add_exercise.AddExerciseScreen
@@ -35,7 +36,7 @@ data class NavItem(
 
 @Composable
 fun MainScreen(
-    onOpenOverlayClick: (ExerciseModel) -> Unit,
+    onOpenOverlayClick: (ExerciseModel, List<ChorusWithSongModel>) -> Unit,
     modifier: Modifier = Modifier,
     initialIndex: Int = 0
 ) {

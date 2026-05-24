@@ -103,7 +103,7 @@ fun EditSongChorusScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SongCover(songToEdit.uri)
+                SongCover(songToEdit.uriString)
 
                 Column(
                     modifier = Modifier.weight(1f),
@@ -126,7 +126,7 @@ fun EditSongChorusScreen(
                 }
             }
 
-            if (playbackState.uri == songToEdit.uri.toString() && playbackState.durationMs > 0) {
+            if (playbackState.uri == songToEdit.uriString && playbackState.durationMs > 0) {
                 MusicSeekBar(
                     playbackState = playbackState,
                     onSeek = viewModel::seekTo
@@ -139,7 +139,7 @@ fun EditSongChorusScreen(
             ) {
                 Button(
                     onClick = {
-                        if (playbackState.isPlaying && playbackState.uri == songToEdit.uri.toString()) {
+                        if (playbackState.isPlaying && playbackState.uri == songToEdit.uriString) {
                             viewModel.stopPlayback()
                         } else {
                             viewModel.playFullSong(songToEdit)
@@ -148,7 +148,7 @@ fun EditSongChorusScreen(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = if (playbackState.isPlaying && playbackState.uri == songToEdit.uri.toString()) {
+                        text = if (playbackState.isPlaying && playbackState.uri == songToEdit.uriString) {
                             "Parar música"
                         } else {
                             "Tocar música inteira"
@@ -184,7 +184,7 @@ fun EditSongChorusScreen(
                         ChorusCard (
                             chorus = chorus,
                             songDurationMs = songToEdit.durationMs,
-                            songUri = songToEdit.uri.toString(),
+                            songUri = songToEdit.uriString,
                             playbackState = playbackState,
                             onPlay = { viewModel.playChorus(songToEdit, chorus) },
                             onStop = { viewModel.stopPlayback() },

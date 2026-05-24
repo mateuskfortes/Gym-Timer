@@ -56,7 +56,7 @@ fun ChorusEditorOverlay(
     var name by remember(chorus.id) { mutableStateOf(chorus.name) }
     var startMs by remember(chorus.id) { mutableFloatStateOf(chorus.startMs.toFloat()) }
 
-    val isPreviewPlaying = playbackState.isPlaying && playbackState.uri == song.uri.toString()
+    val isPreviewPlaying = playbackState.isPlaying && playbackState.uri == song.uriString
 
     Box(
         modifier = Modifier
@@ -81,7 +81,7 @@ fun ChorusEditorOverlay(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    SongCover(song.uri)
+                    SongCover(song.uriString)
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(

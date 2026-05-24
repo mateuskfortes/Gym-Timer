@@ -1,11 +1,11 @@
 package com.example.gymtimer2.domain.model
 
-import android.net.Uri
+import java.io.Serializable
 
 data class SongModel(
     val id: Long,
     val title: String,
     val artist: String,
-    val uri: Uri,
+    val uriString: String,
     val durationMs: Long? = null
-)
+): Serializable

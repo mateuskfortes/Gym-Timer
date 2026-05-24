@@ -10,9 +10,15 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import androidx.core.net.toUri
+import com.example.gymtimer2.GymApplication
 import com.example.gymtimer2.R
 import com.example.gymtimer2.databinding.FloatTimerBinding
+import com.example.gymtimer2.domain.model.ChorusModel
+import com.example.gymtimer2.domain.model.ChorusWithSongModel
 import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.player.MusicPlayerManager
+import com.example.gymtimer2.ui.components.music.hasAudioPermission
 import java.util.Locale
 import kotlin.math.abs
 
@@ -24,8 +30,10 @@ class FloatTimerController {
     private val inflater: LayoutInflater
     private val windowManager: WindowManager
     private val exercise: ExerciseModel
+    private val choruses: List<ChorusWithSongModel>
     private val onClose: () -> Unit
     private val removeAreaController: RemoveAreaController
+    private val playerManager: MusicPlayerManager
     private lateinit var binding: FloatTimerBinding
     private lateinit var layoutParams: WindowManager.LayoutParams
     private var isFloatTimerAttached = false
@@ -37,18 +45,25 @@ class FloatTimerController {
         inflater: LayoutInflater,
         windowManager: WindowManager,
         exercise: ExerciseModel,
+        choruses: List<ChorusWithSongModel>,
         onClose: () -> Unit
     ){
         this.windowManager = windowManager
         this.inflater = inflater
         this.context = context
         this.exercise = exercise
+        this.choruses = choruses
         this.onClose = onClose
-        removeAreaController = RemoveAreaController(
+
+        val app = context.applicationContext as GymApplication
+        this.playerManager = app.musicPlayerManager
+
+        this.removeAreaController = RemoveAreaController(
             context,
             inflater,
             windowManager
         )
+
         setBinding()
         setLayoutParams()
     }
@@ -89,6 +104,8 @@ class FloatTimerController {
             if (isInSet) {
                 isInSet = false
                 startTimer()
+
+                playerManager.stop()
             }
 
             // Start set
@@ -96,6 +113,19 @@ class FloatTimerController {
                 isInSet = true
                 stopTimer()
                 binding.timer.text = context.getString(R.string.float_timer_end_set)
+                val randomChorus = choruses.randomOrNull()
+
+                // Play Song chorus
+                randomChorus?.let {
+                    if (hasAudioPermission(context)) {
+                        runCatching {
+                            playerManager.play(
+                                randomChorus.song.uriString,
+                                randomChorus.chorus.startMs.toInt()
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -225,7 +255,7 @@ class FloatTimerController {
     fun show() {
         if (!isFloatTimerAttached) {
             windowManager.addView(binding.root, layoutParams)
-            binding.timer.text = context.getString(R.string.float_timer_start_set) + " - " + exercise.name
+            binding.timer.text = context.getString(R.string.float_timer_start_set)
             isFloatTimerAttached = true
         }
     }
@@ -237,6 +267,7 @@ class FloatTimerController {
             }
             stopTimer()
             isFloatTimerAttached = false
+            playerManager.stop()
         }
     }
 }

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.util.formatMillisToMinSec
 import com.example.gymtimer2.R
+import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.ExerciseModel
 
 @Composable
@@ -31,7 +32,7 @@ fun ExerciseCard(
     modifier: Modifier,
     onEdit: (ExerciseModel) -> Unit,
     onDelete: (ExerciseModel) -> Unit,
-    onStart: (ExerciseModel) -> Unit
+    onStart: () -> Unit
 ) {
 
     Card(
@@ -91,7 +92,7 @@ fun ExerciseCard(
                     )
                 }
 
-                IconButton(onClick = { onStart(exercise) }) {
+                IconButton(onClick = onStart) {
                     Icon(
                         imageVector = Icons.Filled.PlayArrow,
                         contentDescription = stringResource(R.string.cd_start_exercise)

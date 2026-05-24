@@ -125,7 +125,7 @@ class AddExerciseViewModel(
     }
 
     fun playChorus(song: SongModel, chorus: ChorusModel) {
-        playerManager.play(song.uri, chorus.startMs.toInt())
+        playerManager.play(song.uriString, chorus.startMs.toInt())
     }
 
     fun stopPlayback() {

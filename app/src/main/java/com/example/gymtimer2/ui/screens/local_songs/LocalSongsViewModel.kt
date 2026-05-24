@@ -1,6 +1,7 @@
 package com.example.gymtimer2.ui.screens.local_songs
 
 import android.content.Context
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -100,7 +101,7 @@ class LocalSongsViewModel(
         }
 
         runCatching {
-            playerManager.play(song.uri)
+            playerManager.play(song.uriString)
         }.onSuccess {
             _uiState.update { it.copy(playingSongId = song.id, error = null) }
         }.onFailure { throwable ->

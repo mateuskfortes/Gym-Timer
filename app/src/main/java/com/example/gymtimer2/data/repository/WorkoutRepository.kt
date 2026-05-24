@@ -10,10 +10,10 @@ import com.example.gymtimer2.data.dao.ExerciseChorusDao
 import com.example.gymtimer2.data.dao.ExerciseDao
 import com.example.gymtimer2.data.dao.SongDao
 import com.example.gymtimer2.data.entity.ExerciseChorusEntity
-import com.example.gymtimer2.data.mapper.toDomain
 import com.example.gymtimer2.data.mapper.toEntity
 import com.example.gymtimer2.data.mapper.toModel
 import com.example.gymtimer2.domain.model.ChorusModel
+import com.example.gymtimer2.domain.model.ChorusWithSongModel
 import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.SongModel
 import kotlinx.coroutines.flow.Flow
@@ -33,7 +33,7 @@ class WorkoutRepository(
         }
 
     val savedSongs: Flow<List<SongModel>> = songDao.getAllSongs().map { songs ->
-        songs.map { it.toDomain() }
+        songs.map { it.toModel() }
     }
 
     suspend fun insertExercise(exercise: ExerciseModel): Long {
@@ -88,7 +88,7 @@ class WorkoutRepository(
                         id = id,
                         title = title,
                         artist = artist,
-                        uri = uri,
+                        uriString = uri.toString(),
                         durationMs = durationMs
                     )
                 )
@@ -168,6 +168,12 @@ class WorkoutRepository(
     fun getChorusesByExerciseId(exerciseId: Int): Flow<List<ChorusModel>> {
         return exerciseChorusDao.getChorusesByExerciseId(exerciseId).map { choruses ->
             choruses.map { it.toModel() }
+        }
+    }
+
+    fun getChorusesWithSongsByExerciseId(exerciseId: Int): Flow<List<ChorusWithSongModel>> {
+        return chorusDao.getChorusesWithSongsByExerciseId(exerciseId).map { list ->
+            list.map { it.toModel() }
         }
     }
 

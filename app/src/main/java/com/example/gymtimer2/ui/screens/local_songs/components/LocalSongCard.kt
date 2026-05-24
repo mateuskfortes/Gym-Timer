@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
 import com.example.gymtimer2.ui.components.music.SongCover
@@ -56,7 +57,7 @@ fun SongCard(
                     Spacer(modifier = Modifier.size(8.dp))
                 }
 
-                SongCover(song.uri)
+                SongCover(song.uriString)
 
                 Spacer(modifier = Modifier.size(12.dp))
 

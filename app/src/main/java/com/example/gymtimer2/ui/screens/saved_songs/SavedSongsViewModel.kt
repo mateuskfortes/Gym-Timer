@@ -1,6 +1,7 @@
 package com.example.gymtimer2.ui.screens.saved_songs
 
 import android.content.Context
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
@@ -32,7 +33,7 @@ class SavedSongsViewModel(
         }
 
         runCatching {
-            playerManager.play(song.uri)
+            playerManager.play(song.uriString)
         }.onSuccess {
             _playingSongId.value = song.id
         }.onFailure {

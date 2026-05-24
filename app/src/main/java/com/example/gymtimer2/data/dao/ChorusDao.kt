@@ -5,8 +5,10 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.gymtimer2.data.entity.ChorusEntity
+import com.example.gymtimer2.data.relation.ChorusWithSongRelation
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -26,6 +28,15 @@ interface ChorusDao {
 
     @Query("SELECT * FROM choruses ORDER BY song_id, start_ms ASC")
     fun getAllChoruses(): Flow<List<ChorusEntity>>
+
+    @Transaction
+    @Query("""
+        SELECT c.* FROM choruses c
+        INNER JOIN exercise_choruses ec
+            ON c.id = ec.chorus_id
+        WHERE ec.exercise_id = :exerciseId
+    """)
+    fun getChorusesWithSongsByExerciseId(exerciseId: Int): Flow<List<ChorusWithSongRelation>>
 
     @Query("DELETE FROM choruses WHERE song_id = :songId")
     suspend fun deleteChorusesBySongId(songId: Long)
