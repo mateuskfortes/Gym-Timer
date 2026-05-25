@@ -20,7 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GymTimer2">
         <service
-            android:name=".controllers.OverlayService"
+            android:name=".timer_overlay_service.OverlayService"
             android:exported="false"
             android:foregroundServiceType="specialUse" />
         <activity

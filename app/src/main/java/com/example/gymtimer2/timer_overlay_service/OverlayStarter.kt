@@ -1,11 +1,9 @@
-package com.example.gymtimer2.controllers
+package com.example.gymtimer2.timer_overlay_service
 
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
-import com.example.gymtimer2.domain.model.ChorusWithSongModel
-import com.example.gymtimer2.domain.model.ExerciseModel
 
 const val EXTRA_EXERCISE_ID = "EXERCISE_ID"
 fun startOverlay(context: Context, exerciseId: Int) {

@@ -4,13 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.gymtimer2.controllers.canDrawOverlays
-import com.example.gymtimer2.controllers.requestOverlayPermission
-import com.example.gymtimer2.controllers.startOverlay
-import com.example.gymtimer2.domain.model.ChorusWithSongModel
-import com.example.gymtimer2.domain.model.ExerciseModel
-import com.example.gymtimer2.domain.model.WeightModel
-import com.example.gymtimer2.domain.model.WeightUnit
+import com.example.gymtimer2.timer_overlay_service.canDrawOverlays
+import com.example.gymtimer2.timer_overlay_service.requestOverlayPermission
+import com.example.gymtimer2.timer_overlay_service.startOverlay
 import com.example.gymtimer2.ui.theme.GymTimerTheme
 
 class MainActivity : ComponentActivity() {

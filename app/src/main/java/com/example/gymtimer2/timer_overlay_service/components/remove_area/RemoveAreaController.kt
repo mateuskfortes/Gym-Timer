@@ -1,4 +1,4 @@
-package com.example.gymtimer2.controllers.components
+package com.example.gymtimer2.timer_overlay_service.components.remove_area
 
 import android.content.Context
 import android.graphics.PixelFormat

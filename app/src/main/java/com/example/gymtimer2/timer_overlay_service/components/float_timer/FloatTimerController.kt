@@ -1,4 +1,4 @@
-package com.example.gymtimer2.controllers.components
+package com.example.gymtimer2.timer_overlay_service.components.float_timer
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -14,10 +14,9 @@ import com.example.gymtimer2.GymApplication
 import com.example.gymtimer2.R
 import com.example.gymtimer2.data.repository.WorkoutRepository
 import com.example.gymtimer2.databinding.FloatTimerBinding
-import com.example.gymtimer2.domain.model.ChorusWithSongModel
-import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.ExerciseWithChorusesModel
 import com.example.gymtimer2.player.MusicPlayerManager
+import com.example.gymtimer2.timer_overlay_service.components.remove_area.RemoveAreaController
 import com.example.gymtimer2.ui.components.music.hasAudioPermission
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,19 +28,26 @@ const val FLOAT_TIMER_WIDTH = 450
 const val FLOAT_TIMER_HEIGHT = 220
 
 class FloatTimerController {
+    // Core Android dependencies
     private val context: Context
     private val inflater: LayoutInflater
     private val windowManager: WindowManager
-    private lateinit var workoutExercise: ExerciseWithChorusesModel
+
+    // Callbacks, dependencies, and controllers
     private val onClose: () -> Unit
     private val removeAreaController: RemoveAreaController
     private val playerManager: MusicPlayerManager
     private val repository: WorkoutRepository
+
+    // UI and timer state
+    private lateinit var workoutExercise: ExerciseWithChorusesModel
     private lateinit var binding: FloatTimerBinding
     private lateinit var layoutParams: WindowManager.LayoutParams
-    private var isFloatTimerAttached = false
+    private var isFloatTimerVisible = false
     private var countDownTimer: CountDownTimer? = null
-    private var isInSet: Boolean = false
+    private var state: WorkoutState = WorkoutState.READY_TO_START
+
+    // Coroutine scope for async data loading
     private val scope = CoroutineScope(Dispatchers.Main)
 
     constructor(
@@ -85,7 +91,6 @@ class FloatTimerController {
 
         setOnTouchListener()
     }
-
     private fun setLayoutParams() {
         @Suppress("DEPRECATION")
         val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -107,42 +112,27 @@ class FloatTimerController {
         }
     }
 
-    private fun setOnClickListener() {
-        binding.root.setOnClickListener {
-
-            // Stop set
-            if (isInSet) {
-                isInSet = false
-                startTimer()
-
-                playerManager.stop()
-            }
-
-            // Start set
-            else {
-                isInSet = true
+    private fun updateState(newState: WorkoutState) {
+        state = newState
+        when (state) {
+            WorkoutState.ON_SET -> {
                 stopTimer()
                 binding.timer.text = context.getString(R.string.float_timer_end_set)
-                val randomChorus = workoutExercise.choruses.randomOrNull()
-
-                // Play Song chorus
-                randomChorus?.let {
-                    if (hasAudioPermission(context)) {
-                        runCatching {
-                            playerManager.play(
-                                randomChorus.song.uriString,
-                                randomChorus.chorus.startMs.toInt()
-                            )
-                        }
-                    }
-                }
+                playChorus()
+            }
+            WorkoutState.READY_TO_START -> {
+                stopTimer()
+                binding.timer.text = context.getString(R.string.float_timer_start_set)
+            }
+            WorkoutState.RESTING -> {
+                startTimer()
+                playerManager.stop()
             }
         }
     }
 
+    // Timer management
     private fun startTimer() {
-        stopTimer()
-
         binding.timer.scaleX = 2.1f
         binding.timer.scaleY = 2.1f
 
@@ -156,19 +146,26 @@ class FloatTimerController {
             }
 
             override fun onFinish() {
-                binding.timer.scaleX = 1f
-                binding.timer.scaleY = 1f
-                binding.timer.text = context.getString(R.string.float_timer_start_set)
+                updateState(WorkoutState.READY_TO_START)
             }
         }.start()
     }
-
     private fun stopTimer() {
         countDownTimer?.cancel()
         binding.timer.scaleX = 1f
         binding.timer.scaleY = 1f
     }
 
+    // Touch listener
+    private fun setOnClickListener() {
+        binding.root.setOnClickListener {
+            // Stop set
+            if (state == WorkoutState.ON_SET)
+                updateState(WorkoutState.RESTING)
+            // Start set
+            else updateState(WorkoutState.ON_SET)
+        }
+    }
     private fun setOnTouchListener() {
         @SuppressLint("ClickableViewAccessibility")
         binding.root.setOnTouchListener(object : View.OnTouchListener {
@@ -211,7 +208,7 @@ class FloatTimerController {
                         layoutParams.x = (layoutParams.x + dX).coerceIn(minX, maxX).toInt()
                         layoutParams.y = (layoutParams.y + dY).coerceIn(minY, maxY).toInt()
 
-                        if (isFloatTimerAttached) {
+                        if (isFloatTimerVisible) {
                             windowManager.updateViewLayout(root, layoutParams)
                         }
 
@@ -262,21 +259,37 @@ class FloatTimerController {
         })
     }
 
-    fun show() {
-        if (!isFloatTimerAttached) {
-            windowManager.addView(binding.root, layoutParams)
-            binding.timer.text = context.getString(R.string.float_timer_start_set)
-            isFloatTimerAttached = true
+    // Song chorus
+    private fun playChorus() {
+        val randomChorus = workoutExercise.choruses.randomOrNull()
+
+        randomChorus?.let {
+            if (hasAudioPermission(context)) {
+                runCatching {
+                    playerManager.play(
+                        randomChorus.song.uriString,
+                        randomChorus.chorus.startMs.toInt()
+                    )
+                }
+            }
         }
     }
 
+    // Visibility
+    fun show() {
+        if (!isFloatTimerVisible) {
+            windowManager.addView(binding.root, layoutParams)
+            binding.timer.text = context.getString(R.string.float_timer_start_set)
+            isFloatTimerVisible = true
+        }
+    }
     fun hide() {
-        if (isFloatTimerAttached) {
+        if (isFloatTimerVisible) {
             runCatching {
                 windowManager.removeView(binding.root)
             }
             stopTimer()
-            isFloatTimerAttached = false
+            isFloatTimerVisible = false
             playerManager.stop()
         }
     }

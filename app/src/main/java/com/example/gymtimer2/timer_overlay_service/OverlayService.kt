@@ -1,4 +1,4 @@
-package com.example.gymtimer2.controllers
+package com.example.gymtimer2.timer_overlay_service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -11,7 +11,7 @@ import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.example.gymtimer2.MainActivity
 import com.example.gymtimer2.R
-import com.example.gymtimer2.controllers.components.FloatTimerController
+import com.example.gymtimer2.timer_overlay_service.components.float_timer.FloatTimerController
 
 class OverlayService : Service() {
     companion object {

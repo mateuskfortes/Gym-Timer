@@ -1,4 +1,4 @@
-package com.example.gymtimer2.controllers
+package com.example.gymtimer2.timer_overlay_service
 
 import android.app.Activity
 import android.app.AlertDialog
