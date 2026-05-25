@@ -56,6 +56,9 @@ class EditExerciseViewModel(
     var restSeconds by savedStateHandle.saveable { mutableStateOf("") }
         private set
 
+    var chorusDelay by savedStateHandle.saveable { mutableStateOf("") }
+        private set
+
     private val _associatedChoruses = MutableStateFlow<List<Pair<SongModel, ChorusModel>>>(emptyList())
     val associatedChoruses: StateFlow<List<Pair<SongModel, ChorusModel>>> = _associatedChoruses.asStateFlow()
 
@@ -193,6 +196,12 @@ class EditExerciseViewModel(
         }
     }
 
+    fun onChorusDelayChange(newValue: String) {
+        if (newValue.all { it.isDigit() } || newValue.isBlank()) {
+            chorusDelay = newValue
+        }
+    }
+
     fun updateExercise(goBack: () -> Unit = {}) = viewModelScope.launch {
         val trimmedName = name.trim()
         val trimmedWeight = weight.trim()
@@ -203,6 +212,8 @@ class EditExerciseViewModel(
         }
 
         val restMs = trimmedRest.toLongOrNull()?.let { it * 1000 } ?: return@launch
+        val trimmedChorus = chorusDelay.trim()
+        val chorusDelayMs = trimmedChorus.toLongOrNull()?.let { it * 1000 } ?: 0L
 
         repository.updateExercise(
             ExerciseModel(
@@ -212,7 +223,8 @@ class EditExerciseViewModel(
                     value = trimmedWeight.toInt(),
                     unit = weightUnit,
                 ),
-                restPeriod = restMs
+                restPeriod = restMs,
+                chorusDelay = chorusDelayMs
             )
         )
 

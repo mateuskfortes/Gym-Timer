@@ -12,5 +12,6 @@ data class ExerciseEntity(
     val name: String,
     val weight: Int,
     val weightUnitCode: Int = WeightUnit.TOTAL_KG.code,
+    @ColumnInfo(defaultValue = "0")val chorusDelay: Long = 0L,
     @ColumnInfo(defaultValue = "80000") val restPeriod: Long = 80000L
 )

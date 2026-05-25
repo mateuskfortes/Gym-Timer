@@ -121,6 +121,17 @@ fun EditExerciseScreen(
             )
         )
 
+        OutlinedTextField(
+            value = viewModel.chorusDelay,
+            onValueChange = viewModel::onChorusDelayChange,
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Delay do refrão (s)") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            )
+        )
+
         // Choruses section
         HorizontalDivider()
 

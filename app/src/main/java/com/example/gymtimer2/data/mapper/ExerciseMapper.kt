@@ -15,6 +15,7 @@ fun ExerciseEntity.toModel(): ExerciseModel {
             unit = WeightUnit.fromCode(weightUnitCode)
         ),
         restPeriod = restPeriod,
+        chorusDelay = chorusDelay
     )
 }
 
@@ -24,6 +25,7 @@ fun ExerciseModel.toEntity(): ExerciseEntity {
         name = name,
         weight = weight.value,
         weightUnitCode = weight.unit.code,
-        restPeriod = restPeriod
+        restPeriod = restPeriod,
+        chorusDelay = chorusDelay
     )
 }

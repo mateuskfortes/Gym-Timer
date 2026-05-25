@@ -50,6 +50,25 @@ class MusicPlayerManager(
         startProgressUpdates(uri.toUri())
     }
 
+    fun delayedPlay(uri: String, startAtMsRaw: Int = 0, delayMs: Int = 0, playForMs: Int? = null) {
+        var startAtMs = startAtMsRaw - delayMs
+        var silenceDurationMs: Int = 0
+
+        if (startAtMs < 0) {
+            silenceDurationMs = -startAtMs
+            startAtMs = 0
+        }
+
+        scope.launch {
+            delay(silenceDurationMs.toLong())
+            play(
+                uri = uri,
+                startAtMs = startAtMs,
+                playForMs = playForMs
+            )
+        }
+    }
+
     fun stop() {
         stopInternal()
     }

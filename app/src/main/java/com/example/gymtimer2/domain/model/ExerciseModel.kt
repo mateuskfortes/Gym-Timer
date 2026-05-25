@@ -7,4 +7,5 @@ data class ExerciseModel(
     val name: String,
     val weight: WeightModel,
     val restPeriod: Long,
+    val chorusDelay: Long
 ): Serializable

@@ -40,6 +40,9 @@ class AddExerciseViewModel(
     var restSeconds by savedStateHandle.saveable { mutableStateOf("80") }
         private set
 
+    var chorusDelay by savedStateHandle.saveable { mutableStateOf("0") }
+        private set
+
     var weightUnit by savedStateHandle.saveable { mutableStateOf(WeightUnit.TOTAL_KG) }
         private set
 
@@ -98,6 +101,12 @@ class AddExerciseViewModel(
         }
     }
 
+    fun onChorusDelayChange(newValue: String) {
+        if (newValue.all { it.isDigit() } || newValue.isBlank()) {
+            chorusDelay = newValue
+        }
+    }
+
     fun onWeightUnitChange(newValue: WeightUnit) {
         weightUnit = newValue
     }
@@ -143,6 +152,8 @@ class AddExerciseViewModel(
 
         val weightValue = trimmedWeight.toIntOrNull() ?: return@launch
         val restMs = trimmedRest.toLongOrNull()?.let { it * 1000 } ?: return@launch
+        val trimmedChorusDelay = chorusDelay.trim()
+        val chorusDelayMs = trimmedChorusDelay.toLongOrNull()?.let { it * 1000 } ?: 0L
 
         val exercise = ExerciseModel(
             id = 0,
@@ -152,6 +163,8 @@ class AddExerciseViewModel(
                 unit = weightUnit
             ),
             restPeriod = restMs
+            ,
+            chorusDelay = chorusDelayMs
         )
 
         // Insert exercise and get the auto-generated ID

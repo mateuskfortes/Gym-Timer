@@ -266,9 +266,10 @@ class FloatTimerController {
         randomChorus?.let {
             if (hasAudioPermission(context)) {
                 runCatching {
-                    playerManager.play(
+                    playerManager.delayedPlay(
                         randomChorus.song.uriString,
-                        randomChorus.chorus.startMs.toInt()
+                        randomChorus.chorus.startMs.toInt(),
+                        workoutExercise.exercise.chorusDelay.toInt()
                     )
                 }
             }
