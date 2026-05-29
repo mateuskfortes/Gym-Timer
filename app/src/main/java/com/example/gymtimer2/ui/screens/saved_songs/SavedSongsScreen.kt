@@ -34,8 +34,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gymtimer2.GymApplication
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.ui.components.music.MusicPermissionGate
-import com.example.gymtimer2.ui.components.music.hasAudioPermission
-import com.example.gymtimer2.ui.components.music.requiredAudioPermission
+import com.example.gymtimer2.util.hasAudioPermission
+import com.example.gymtimer2.util.requiredAudioPermission
 import com.example.gymtimer2.ui.screens.saved_songs.components.SongCard
 
 @Composable

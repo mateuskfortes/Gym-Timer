@@ -1,7 +1,6 @@
 package com.example.gymtimer2.ui.screens.saved_songs
 
 import android.content.Context
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
@@ -9,7 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.gymtimer2.data.repository.WorkoutRepository
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.player.MusicPlayerManager
-import com.example.gymtimer2.ui.components.music.hasAudioPermission
+import com.example.gymtimer2.util.hasAudioPermission
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow

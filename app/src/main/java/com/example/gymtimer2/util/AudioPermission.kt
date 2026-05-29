@@ -1,4 +1,4 @@
-package com.example.gymtimer2.ui.components.music
+package com.example.gymtimer2.util
 
 import android.Manifest
 import android.content.Context

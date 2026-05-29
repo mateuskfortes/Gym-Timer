@@ -104,7 +104,6 @@ fun MainScreen(
             )
             11 -> LocalSongsScreen(
                 modifier = Modifier.padding(innerPadding),
-                onOpenSavedSongs = { selectedIndex = 2 },
                 goBack = { selectedIndex = 2 }
             )
             10 -> EditExerciseScreen(

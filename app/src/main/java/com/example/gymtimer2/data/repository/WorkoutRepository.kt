@@ -39,6 +39,12 @@ class WorkoutRepository(
         songs.map { it.toModel() }
     }
 
+    fun getSavedSongsIds(): Flow<List<Long>> {
+        return savedSongs.map{ songs ->
+            songs.map { it.id }
+        }
+    }
+
     suspend fun insertExercise(exercise: ExerciseModel): Long {
         return exerciseDao.insert(exercise.toEntity())
     }

@@ -17,7 +17,7 @@ import com.example.gymtimer2.databinding.FloatTimerBinding
 import com.example.gymtimer2.domain.model.ExerciseWithChorusesModel
 import com.example.gymtimer2.player.MusicPlayerManager
 import com.example.gymtimer2.timer_overlay_service.components.remove_area.RemoveAreaController
-import com.example.gymtimer2.ui.components.music.hasAudioPermission
+import com.example.gymtimer2.util.hasAudioPermission
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

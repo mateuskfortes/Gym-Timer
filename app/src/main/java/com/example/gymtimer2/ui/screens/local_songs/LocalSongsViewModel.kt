@@ -1,14 +1,13 @@
 package com.example.gymtimer2.ui.screens.local_songs
 
 import android.content.Context
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gymtimer2.data.repository.WorkoutRepository
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.player.MusicPlayerManager
-import com.example.gymtimer2.ui.components.music.hasAudioPermission
+import com.example.gymtimer2.util.hasAudioPermission
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +23,7 @@ class LocalSongsViewModel(
     private val _uiState = MutableStateFlow(LocalSongsUiState())
     val uiState: StateFlow<LocalSongsUiState> = _uiState.asStateFlow()
 
-    fun loadSongs() {
+    fun loadSongs(savedSongsIds: List<Long>) {
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
@@ -34,7 +33,7 @@ class LocalSongsViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        songs = songs
+                        songs = songs.filter { song -> song.id !in savedSongsIds }
                     )
                 }
             }.onFailure { throwable ->
@@ -62,7 +61,7 @@ class LocalSongsViewModel(
         }
     }
 
-    fun saveSelectedSongs() {
+    fun saveSelectedSongs(cbFunc: () -> Unit) {
         val songsToSave = _uiState.value.songs.filter { song ->
             song.id in _uiState.value.selectedSongIds
         }
@@ -81,6 +80,7 @@ class LocalSongsViewModel(
                         selectedSongIds = emptySet()
                     )
                 }
+                cbFunc()
             }.onFailure { throwable ->
                 _uiState.update {
                     it.copy(
@@ -120,17 +120,21 @@ class LocalSongsViewModel(
         playerManager.seekTo(positionMs)
     }
 
-
     fun checkAudioPermission(context: Context): Boolean {
         val hasPermission = hasAudioPermission(context)
 
         _uiState.update { it.copy(hasPermission = hasPermission) }
 
-        if (hasPermission) loadSongs()
+        if (hasPermission) {
+            viewModelScope.launch {
+                repository.getSavedSongsIds().collect {
+                    loadSongs(it)
+                }
+            }
+        }
 
         return hasPermission
     }
-
 
     companion object {
         fun factory(
