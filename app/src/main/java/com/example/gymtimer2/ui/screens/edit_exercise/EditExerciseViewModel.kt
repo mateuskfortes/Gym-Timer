@@ -45,6 +45,8 @@ class EditExerciseViewModel(
 
     private var originalRestSeconds: String = ""
 
+    private var originalChorusDelay: String = ""
+
     private var originalChorusIds: Set<Long> = emptySet()
 
     var name by savedStateHandle.saveable { mutableStateOf("") }
@@ -100,9 +102,11 @@ class EditExerciseViewModel(
         weight = exercise.weight.value.toString()
         weightUnit = exercise.weight.unit
         restSeconds = (exercise.restPeriod / 1000).toString()
+        chorusDelay = (exercise.chorusDelay / 1000).toString()
         originalName = name
         originalWeight = weight
         originalRestSeconds = restSeconds
+        originalChorusDelay = chorusDelay
 
         viewModelScope.launch {
             val chorusesFlow = repository.getChorusesByExerciseId(exercise.id)
@@ -146,6 +150,7 @@ class EditExerciseViewModel(
         name = originalName
         weight = originalWeight
         restSeconds = originalRestSeconds
+        chorusDelay = originalChorusDelay
 
         goBack()
     }

@@ -27,14 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gymtimer2.GymApplication
 import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.ExerciseModel
-import com.example.gymtimer2.domain.model.WeightModel
-import com.example.gymtimer2.domain.model.WeightUnit
 import com.example.gymtimer2.ui.components.chorus.ExerciseChorusCard
 import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
 
