@@ -88,7 +88,6 @@ fun MainScreen(
             1 -> AddExerciseScreen(
                 modifier = Modifier.padding(innerPadding),
                 goBack = {
-                    exerciseToEdit = null
                     selectedIndex = 0
                 }
             )
@@ -98,11 +97,15 @@ fun MainScreen(
                 onEditSong = { song ->
                     songToEdit = song
                     selectedIndex = 12
+                },
+                goBack = {
+                    selectedIndex = 0
                 }
             )
             11 -> LocalSongsScreen(
                 modifier = Modifier.padding(innerPadding),
-                onOpenSavedSongs = { selectedIndex = 2 }
+                onOpenSavedSongs = { selectedIndex = 2 },
+                goBack = { selectedIndex = 2 }
             )
             10 -> EditExerciseScreen(
                 modifier = Modifier.padding(innerPadding),

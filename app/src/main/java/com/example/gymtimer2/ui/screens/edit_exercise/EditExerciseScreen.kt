@@ -1,5 +1,6 @@
 package com.example.gymtimer2.ui.screens.edit_exercise
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -74,6 +75,8 @@ fun EditExerciseScreen(
             onDismiss = { showSelectModal = false }
         )
     }
+
+    BackHandler { goBack() }
 
     Column(
         modifier = modifier

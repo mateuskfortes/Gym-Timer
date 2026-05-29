@@ -1,5 +1,6 @@
 package com.example.gymtimer2.ui.screens.saved_songs
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +42,8 @@ import com.example.gymtimer2.ui.screens.saved_songs.components.SongCard
 fun SavedSongsScreen(
     modifier: Modifier = Modifier,
     onOpenSelection: () -> Unit = {},
-    onEditSong: (SongModel) -> Unit = {}
+    onEditSong: (SongModel) -> Unit = {},
+    goBack: () -> Unit = { }
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as GymApplication
@@ -89,6 +91,8 @@ fun SavedSongsScreen(
     val songs by viewModel.savedSongs.collectAsState(initial = emptyList())
     val playingSongId by viewModel.playingSongId.collectAsState()
     val playbackState by app.musicPlayerManager.playbackState.collectAsState()
+
+    BackHandler { goBack() }
 
     Surface(modifier = modifier.fillMaxSize()) {
         MusicPermissionGate(

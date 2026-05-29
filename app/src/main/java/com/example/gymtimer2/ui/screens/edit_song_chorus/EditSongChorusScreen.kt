@@ -1,5 +1,6 @@
 package com.example.gymtimer2.ui.screens.edit_song_chorus
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -65,6 +66,8 @@ fun EditSongChorusScreen(
             viewModel.stopPlayback()
         }
     }
+
+    BackHandler { goBack() }
 
     Box(
         modifier = modifier.fillMaxSize()

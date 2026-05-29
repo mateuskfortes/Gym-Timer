@@ -1,5 +1,6 @@
 package com.example.gymtimer2.ui.screens.local_songs
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -37,7 +38,8 @@ import com.example.gymtimer2.ui.components.music.requiredAudioPermission
 @Composable
 fun LocalSongsScreen(
     modifier: Modifier = Modifier,
-    onOpenSavedSongs: () -> Unit = {}
+    onOpenSavedSongs: () -> Unit = {},
+    goBack: () -> Unit = { }
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as GymApplication
@@ -81,6 +83,8 @@ fun LocalSongsScreen(
     LaunchedEffect(Unit) {
         viewModel.checkAudioPermission(context)
     }
+
+    BackHandler { goBack() }
 
     Surface(modifier = modifier.fillMaxSize()) {
         MusicPermissionGate(
