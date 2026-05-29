@@ -24,6 +24,7 @@ class MusicPlayerManager(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var progressJob: Job? = null
     private var previewEndAtMs: Int? = null
+    private var delayedPlayerJob: Job? = null
 
     private val _playbackState = MutableStateFlow(MusicPlaybackState())
     val playbackState: StateFlow<MusicPlaybackState> = _playbackState.asStateFlow()
@@ -59,7 +60,8 @@ class MusicPlayerManager(
             startAtMs = 0
         }
 
-        scope.launch {
+        delayedPlayerJob?.cancel()
+        delayedPlayerJob = scope.launch {
             delay(silenceDurationMs.toLong())
             play(
                 uri = uri,
@@ -122,6 +124,8 @@ class MusicPlayerManager(
 
         mediaPlayer?.release()
         mediaPlayer = null
+
+        delayedPlayerJob?.cancel()
 
         _playbackState.value = MusicPlaybackState()
     }
