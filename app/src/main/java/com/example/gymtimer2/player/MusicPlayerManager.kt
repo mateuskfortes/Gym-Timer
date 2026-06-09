@@ -25,12 +25,14 @@ class MusicPlayerManager(
     private var progressJob: Job? = null
     private var previewEndAtMs: Int? = null
     private var delayedPlayerJob: Job? = null
+    private var fadeInJob: Job? = null
 
     private val _playbackState = MutableStateFlow(MusicPlaybackState())
     val playbackState: StateFlow<MusicPlaybackState> = _playbackState.asStateFlow()
 
-    fun play(uri: String, startAtMs: Int = 0, playForMs: Int? = null) {
+    fun play(uri: String, startAtMs: Int = 0, fadeInDurationMs: Int = 0, playForMs: Int? = null) {
         stopInternal()
+        fadeInJob?.cancel()
 
         mediaPlayer = MediaPlayer().apply {
             setDataSource(context, uri.toUri())
@@ -44,15 +46,37 @@ class MusicPlayerManager(
             setOnCompletionListener {
                 stopInternal()
             }
+            // start with volume at 0 for fade-in
+            setVolume(0f, 0f)
             start()
         }
 
         updatePlaybackState(uri, mediaPlayer?.currentPosition ?: 0, mediaPlayer?.duration ?: 0, true)
         startProgressUpdates(uri.toUri())
+
+        // perform fade-in if requested
+        if (fadeInDurationMs > 0) {
+            fadeInJob = scope.launch {
+                val totalMs = fadeInDurationMs.coerceAtLeast(1)
+                val stepMs = 50L
+                val steps = ((totalMs + stepMs - 1) / stepMs).toInt().coerceAtLeast(1)
+                for (i in 0 until steps) {
+                    if (!isActive) break
+                    val fraction = ((i + 1) * stepMs).toFloat() / totalMs
+                    val vol = fraction.coerceIn(0f, 1f)
+                    mediaPlayer?.setVolume(vol, vol)
+                    delay(stepMs)
+                }
+                mediaPlayer?.setVolume(1f, 1f)
+                fadeInJob = null
+            }
+        } else {
+            mediaPlayer?.setVolume(1f, 1f)
+        }
     }
 
-    fun delayedPlay(uri: String, startAtMsRaw: Int = 0, delayMs: Int = 0, playForMs: Int? = null) {
-        var startAtMs = startAtMsRaw - delayMs
+    fun delayedPlay(uri: String, startChorusAtMs: Int = 0, delayMs: Int = 0, playForMs: Int? = null) {
+        var startAtMs = startChorusAtMs - delayMs
         var silenceDurationMs: Int = 0
 
         if (startAtMs < 0) {
@@ -66,6 +90,7 @@ class MusicPlayerManager(
             play(
                 uri = uri,
                 startAtMs = startAtMs,
+                fadeInDurationMs = startChorusAtMs - startAtMs,
                 playForMs = playForMs
             )
         }
@@ -121,6 +146,9 @@ class MusicPlayerManager(
         progressJob?.cancel()
         progressJob = null
         previewEndAtMs = null
+
+        fadeInJob?.cancel()
+        fadeInJob = null
 
         mediaPlayer?.release()
         mediaPlayer = null
