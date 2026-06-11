@@ -37,6 +37,7 @@ import com.example.gymtimer2.ui.components.music.MusicSeekBar
 import com.example.gymtimer2.util.formatMillisToMinSec
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.gymtimer2.ui.screens.edit_song_chorus.components.ChorusCard
 import com.example.gymtimer2.ui.screens.edit_song_chorus.components.ChorusEditorOverlay
 
@@ -51,15 +52,14 @@ fun EditSongChorusScreen(
     val viewModel: EditSongChorusViewModel = viewModel(
         factory = EditSongChorusViewModel.factory(
             repository = app.container.workoutRepository,
-            playerManager = app.musicPlayerManager
+            playerManager = app.musicPlayerManager,
+            songToEdit = songToEdit
         )
     )
-    val playbackState by app.musicPlayerManager.playbackState.collectAsState()
 
-    val chorusesFlow = remember(songToEdit.id) { viewModel.choruses(songToEdit.id) }
-    val choruses by chorusesFlow.collectAsState(initial = emptyList())
-
-    var chorusToEdit by remember(songToEdit.id) { mutableStateOf<ChorusModel?>(null) }
+    val playbackState by app.musicPlayerManager.playbackState.collectAsStateWithLifecycle()
+    val choruses by viewModel.choruses.collectAsStateWithLifecycle()
+    val chorusToEdit by viewModel.chorusToEdit.collectAsStateWithLifecycle()
 
     DisposableEffect(Unit) {
         onDispose {
@@ -145,7 +145,7 @@ fun EditSongChorusScreen(
                         if (playbackState.isPlaying && playbackState.uri == songToEdit.uriString) {
                             viewModel.stopPlayback()
                         } else {
-                            viewModel.playFullSong(songToEdit)
+                            viewModel.play()
                         }
                     },
                     modifier = Modifier.weight(1f)
@@ -161,7 +161,7 @@ fun EditSongChorusScreen(
             }
 
             Button(
-                onClick = { chorusToEdit = viewModel.createNewChorus(songToEdit) },
+                onClick = { viewModel.newChorus() },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = null)
@@ -186,19 +186,8 @@ fun EditSongChorusScreen(
                     items(choruses.filter { it.id != 0L }, key = { it.id }) { chorus ->
                         ChorusCard (
                             chorus = chorus,
-                            songDurationMs = songToEdit.durationMs,
-                            songUri = songToEdit.uriString,
                             playbackState = playbackState,
-                            onPlay = { viewModel.playChorus(songToEdit, chorus) },
-                            onStop = { viewModel.stopPlayback() },
-                            onEdit = { chorusToEdit = chorus },
-                            onDelete = {
-                                viewModel.deleteChorus(chorus) {
-                                    if (chorusToEdit?.id == chorus.id) {
-                                        chorusToEdit = null
-                                    }
-                                }
-                            }
+                            viewModel = viewModel,
                         )
                     }
                 }
@@ -210,16 +199,10 @@ fun EditSongChorusScreen(
                 chorus = chorusToEdit!!,
                 song = songToEdit,
                 playbackState = playbackState,
-                onPreview = { startMs -> viewModel.playChorusPreview(songToEdit, startMs) },
+                onPreview = { startMs -> viewModel.play(startMs.toInt()) },
                 onStop = viewModel::stopPlayback,
-                onCancel = { chorusToEdit = null },
-                onSave = { updatedChorus ->
-                    viewModel.saveChorus(
-                        chorus = updatedChorus,
-                        songDurationMs = songToEdit.durationMs,
-                        onDone = { chorusToEdit = null }
-                    )
-                }
+                onCancel = { viewModel.setChorusToEdit(null) },
+                onSave = viewModel::saveUpdatedChorus
             )
         }
     }

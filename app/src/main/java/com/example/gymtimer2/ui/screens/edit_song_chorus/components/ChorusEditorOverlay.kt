@@ -124,6 +124,7 @@ fun ChorusEditorOverlay(
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(text = "Escolha o início do refrão", style = MaterialTheme.typography.labelMedium)
+
                     Slider(
                         value = startMs.coerceIn(0f, maxDuration.toFloat()),
                         onValueChange = { startMs = it },

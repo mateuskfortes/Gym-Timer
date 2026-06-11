@@ -1,6 +1,5 @@
 package com.example.gymtimer2.ui.screens.edit_song_chorus
 
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -9,45 +8,50 @@ import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.player.MusicPlayerManager
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class EditSongChorusViewModel(
     private val repository: WorkoutRepository,
-    private val playerManager: MusicPlayerManager
+    private val playerManager: MusicPlayerManager,
+    val songToEdit: SongModel
 ) : ViewModel() {
 
-    fun choruses(songId: Long): Flow<List<ChorusModel>> = repository.getChorusesBySongId(songId)
+    private val _choruses = MutableStateFlow<List<ChorusModel>>(emptyList())
+    val choruses = _choruses.asStateFlow()
 
-    fun createNewChorus(song: SongModel): ChorusModel {
-        return ChorusModel(
-            songId = song.id,
-            name = "",
-            startMs = 0
-        )
+    private val _chorusToEdit = MutableStateFlow<ChorusModel?>(null)
+    val chorusToEdit = _chorusToEdit.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            repository.getChorusesBySongId(songToEdit.id).collect { choruses ->
+                _choruses.value = choruses
+            }
+        }
     }
 
-    fun playFullSong(song: SongModel) {
-        playerManager.play(song.uriString, 0)
+    // Playback functions
+    fun play(startMs: Int = 0) {
+        playerManager.play(songToEdit.uriString, startMs)
     }
-
-    fun playChorus(song: SongModel, chorus: ChorusModel) {
-        playerManager.play(song.uriString, chorus.startMs.toInt())
-    }
-
-    fun playChorusPreview(song: SongModel, startMs: Long) {
-        playerManager.play(song.uriString, startMs.toInt())
-    }
-
     fun stopPlayback() {
         playerManager.stop()
     }
-
     fun seekTo(positionMs: Int) {
         playerManager.seekTo(positionMs)
     }
 
+    // Chorus management functions
+    fun newChorus() {
+        _chorusToEdit.value = ChorusModel(
+            songId = songToEdit.id,
+            name = "",
+            startMs = 0
+        )
+    }
     fun saveChorus(
         chorus: ChorusModel,
         songDurationMs: Long? = null,
@@ -81,16 +85,25 @@ class EditSongChorusViewModel(
         }
     }
 
-    fun deleteChorus(chorus: ChorusModel, onDone: () -> Unit = {}) {
+    // Chorus card management
+    fun playChorus(chorus: ChorusModel) {
+        play(chorus.startMs.toInt())
+    }
+    fun setChorusToEdit(chorus: ChorusModel?) {
+        _chorusToEdit.value = chorus
+    }
+    fun saveUpdatedChorus(chorus: ChorusModel) {
+        saveChorus(
+            chorus = chorus,
+            songToEdit.durationMs
+        ) {
+            _chorusToEdit.value = null
+        }
+    }
+    fun deleteChorus(chorus: ChorusModel) {
         viewModelScope.launch {
-            val deleted = withContext(Dispatchers.IO) {
-                runCatching {
-                    repository.deleteChorus(chorus)
-                }.isSuccess
-            }
-
-            if (deleted) {
-                onDone()
+            withContext(Dispatchers.IO) {
+                repository.deleteChorus(chorus)
             }
         }
     }
@@ -98,11 +111,12 @@ class EditSongChorusViewModel(
     companion object {
         fun factory(
             repository: WorkoutRepository,
-            playerManager: MusicPlayerManager
+            playerManager: MusicPlayerManager,
+            songToEdit: SongModel
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return EditSongChorusViewModel(repository, playerManager) as T
+                return EditSongChorusViewModel(repository, playerManager, songToEdit) as T
             }
         }
     }

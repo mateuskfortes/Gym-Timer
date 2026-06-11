@@ -24,22 +24,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
+import com.example.gymtimer2.ui.screens.edit_song_chorus.EditSongChorusViewModel
 import com.example.gymtimer2.util.formatMillisToMinSec
 
 @Composable
 fun ChorusCard(
     chorus: ChorusModel,
-    songDurationMs: Long?,
-    songUri: String,
     playbackState: MusicPlaybackState,
-    onPlay: () -> Unit,
-    onStop: () -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
+    viewModel: EditSongChorusViewModel,
 ) {
-    val durationMs = songDurationMs?.takeIf { it > 0 } ?: maxOf(chorus.startMs + 1, 1L)
+    val durationMs = viewModel.songToEdit.durationMs?.takeIf { it > 0 }
+        ?: maxOf(chorus.startMs + 1, 1L)
     val sliderValue = chorus.startMs.toFloat().coerceIn(0f, durationMs.toFloat())
-    val isChorusPlaying = playbackState.isPlaying && playbackState.uri == songUri
+    val isChorusPlaying = playbackState.isPlaying && playbackState.uri == viewModel.songToEdit.uriString
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -70,9 +67,9 @@ fun ChorusCard(
                 IconButton(
                     onClick = {
                         if (isChorusPlaying) {
-                            onStop()
+                            viewModel.stopPlayback()
                         } else {
-                            onPlay()
+                            viewModel.playChorus(chorus)
                         }
                     }
                 ) {
@@ -82,7 +79,7 @@ fun ChorusCard(
                     )
                 }
 
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = { viewModel.deleteChorus(chorus) }) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
                         contentDescription = "Excluir refrão"
@@ -93,7 +90,7 @@ fun ChorusCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onEdit)
+                    .clickable(onClick = { viewModel.setChorusToEdit(chorus) })
             ) {
                 Slider(
                     value = sliderValue,
