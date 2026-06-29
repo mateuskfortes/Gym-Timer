@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.util.formatMillisToMinSec
 import com.example.gymtimer2.R
-import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.ExerciseModel
 
 @Composable
@@ -70,6 +69,12 @@ fun ExerciseCard(
 
                 Text(
                     text = "Descanso: ${formatMillisToMinSec(exercise.restPeriod)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    text = "Delay do refrão: ${formatMillisToMinSec(exercise.chorusDelay)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
