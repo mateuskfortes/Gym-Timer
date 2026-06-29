@@ -1,16 +1,22 @@
 package com.example.gymtimer2.ui.screens.edit_song_chorus.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
@@ -41,6 +47,7 @@ import com.example.gymtimer2.ui.components.music.SongCover
 import com.example.gymtimer2.ui.screens.edit_song_chorus.EditSongChorusViewModel
 import com.example.gymtimer2.util.formatMillisToMinSec
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun ChorusEditorOverlay(
     chorus: ChorusModel,
@@ -121,12 +128,28 @@ fun ChorusEditorOverlay(
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(text = "Escolha o início do refrão", style = MaterialTheme.typography.labelMedium)
 
-                    Slider(
-                        value = startMs.coerceIn(0f, maxDuration.toFloat()),
-                        onValueChange = { startMs = it },
-                        valueRange = 0f..maxDuration.toFloat(),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(20.dp)) {
+                        val markerOffset = (maxWidth - 4.dp) * startMs / maxDuration.toFloat()
+
+                        Slider(
+                            value = playbackState.currentPositionMs.toFloat(),
+                            onValueChange = {
+                                startMs = it
+                                viewModel.seekTo(it.toInt())
+                                playbackState.currentPositionMs = ((viewModel.songToEdit.durationMs ?: 0) * it / maxDuration.toFloat()).toInt()
+                            },
+                            valueRange = 0f..maxDuration.toFloat(),
+                            modifier = Modifier.fillMaxWidth().fillMaxHeight()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .width(4.dp)
+                                .fillMaxHeight()
+                                .align(Alignment.CenterStart)
+                                .offset(x = markerOffset)
+                                .background(Color.Magenta, shape = RoundedCornerShape(2.dp))
+                        )
+                    }
                     Text(
                         text = "Início selecionado: ${formatMillisToMinSec(startMs.toLong())}",
                         style = MaterialTheme.typography.bodySmall,
