@@ -19,13 +19,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.gymtimer2.domain.model.ChorusWithSongModel
 import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.ui.screens.add_exercise.AddExerciseScreen
 import com.example.gymtimer2.ui.screens.edit_exercise.EditExerciseScreen
 import com.example.gymtimer2.ui.screens.exercise_list.ExerciseListScreen
-import com.example.gymtimer2.ui.screens.edit_song_chorus.EditSongChorusScreen
+import com.example.gymtimer2.ui.screens.edit_chorus.EditSongChorusScreen
 import com.example.gymtimer2.ui.screens.saved_songs.SavedSongsScreen
 import com.example.gymtimer2.ui.screens.local_songs.LocalSongsScreen
 

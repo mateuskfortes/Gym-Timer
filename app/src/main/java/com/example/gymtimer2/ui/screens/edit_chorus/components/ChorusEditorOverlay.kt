@@ -1,4 +1,4 @@
-package com.example.gymtimer2.ui.screens.edit_song_chorus.components
+package com.example.gymtimer2.ui.screens.edit_chorus.components
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
 import com.example.gymtimer2.ui.components.music.SongCover
-import com.example.gymtimer2.ui.screens.edit_song_chorus.EditSongChorusViewModel
+import com.example.gymtimer2.ui.screens.edit_chorus.EditSongChorusViewModel
 import com.example.gymtimer2.util.formatMillisToMinSec
 
 @SuppressLint("UnusedBoxWithConstraintsScope")

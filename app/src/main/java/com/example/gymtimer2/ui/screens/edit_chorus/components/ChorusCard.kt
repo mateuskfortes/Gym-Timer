@@ -1,4 +1,4 @@
-package com.example.gymtimer2.ui.screens.edit_song_chorus.components
+package com.example.gymtimer2.ui.screens.edit_chorus.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,10 +21,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
-import com.example.gymtimer2.ui.screens.edit_song_chorus.EditSongChorusViewModel
+import com.example.gymtimer2.ui.components.music.deleteChorusDialog
+import com.example.gymtimer2.ui.screens.edit_chorus.EditSongChorusViewModel
 import com.example.gymtimer2.util.formatMillisToMinSec
 
 @Composable
@@ -37,6 +39,7 @@ fun ChorusCard(
         ?: maxOf(chorus.startMs + 1, 1L)
     val sliderValue = chorus.startMs.toFloat().coerceIn(0f, durationMs.toFloat())
     val isChorusPlaying = playbackState.isPlaying && playbackState.uri == viewModel.songToEdit.uriString
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -79,7 +82,7 @@ fun ChorusCard(
                     )
                 }
 
-                IconButton(onClick = { viewModel.deleteChorus(chorus) }) {
+                IconButton(onClick = { deleteChorusDialog(context, chorus) {viewModel.deleteChorus(chorus) }}) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
                         contentDescription = "Excluir refrão"

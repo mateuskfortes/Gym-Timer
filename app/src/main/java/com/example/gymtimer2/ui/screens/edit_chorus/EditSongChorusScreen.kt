@@ -1,4 +1,4 @@
-package com.example.gymtimer2.ui.screens.edit_song_chorus
+package com.example.gymtimer2.ui.screens.edit_chorus
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -33,8 +33,8 @@ import com.example.gymtimer2.util.formatMillisToMinSec
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.gymtimer2.ui.screens.edit_song_chorus.components.ChorusCard
-import com.example.gymtimer2.ui.screens.edit_song_chorus.components.ChorusEditorOverlay
+import com.example.gymtimer2.ui.screens.edit_chorus.components.ChorusCard
+import com.example.gymtimer2.ui.screens.edit_chorus.components.ChorusEditorOverlay
 
 @Composable
 fun EditSongChorusScreen(

@@ -1,4 +1,4 @@
-package com.example.gymtimer2.ui.screens.edit_song_chorus
+package com.example.gymtimer2.ui.screens.edit_chorus
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -101,6 +101,7 @@ class EditSongChorusViewModel(
         }
     }
     fun deleteChorus(chorus: ChorusModel) {
+        playerManager.stop()
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 repository.deleteChorus(chorus)
