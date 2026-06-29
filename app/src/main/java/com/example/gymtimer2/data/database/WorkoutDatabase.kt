@@ -7,6 +7,7 @@ import androidx.room.DeleteColumn
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.AutoMigrationSpec
+import com.example.gymtimer2.BuildConfig
 import com.example.gymtimer2.data.dao.ChorusDao
 import com.example.gymtimer2.data.dao.ExerciseDao
 import com.example.gymtimer2.data.dao.ExerciseChorusDao
@@ -56,10 +57,16 @@ abstract class WorkoutDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): WorkoutDatabase {
             return INSTANCE ?: synchronized(this) {
+                val databaseName = if (BuildConfig.DEBUG) {
+                    "gym_timer_database_dev"
+                } else {
+                    "gym_timer_database"
+                }
+
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     WorkoutDatabase::class.java,
-                    "gym_timer_database"
+                    databaseName
                 )
                     // If a required migration (including downgrade) is missing,
                     // fall back to destructive migration to avoid runtime crashes.
