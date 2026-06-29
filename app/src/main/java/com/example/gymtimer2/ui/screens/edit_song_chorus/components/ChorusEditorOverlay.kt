@@ -37,26 +37,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
-import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.ui.components.music.SongCover
+import com.example.gymtimer2.ui.screens.edit_song_chorus.EditSongChorusViewModel
 import com.example.gymtimer2.util.formatMillisToMinSec
 
 @Composable
 fun ChorusEditorOverlay(
     chorus: ChorusModel,
-    song: SongModel,
     playbackState: MusicPlaybackState,
-    onPreview: (Long) -> Unit,
-    onStop: () -> Unit,
-    onCancel: () -> Unit,
-    onSave: (ChorusModel) -> Unit
+    viewModel: EditSongChorusViewModel,
 ) {
-    val maxDuration = song.durationMs?.takeIf { it > 0 } ?: maxOf(chorus.startMs + 1, 1L)
+    val maxDuration = viewModel.songToEdit.durationMs?.takeIf { it > 0 } ?: maxOf(chorus.startMs + 1, 1L)
 
     var name by remember(chorus.id) { mutableStateOf(chorus.name) }
     var startMs by remember(chorus.id) { mutableFloatStateOf(chorus.startMs.toFloat()) }
 
-    val isPreviewPlaying = playbackState.isPlaying && playbackState.uri == song.uriString
+    val isPreviewPlaying = playbackState.isPlaying && playbackState.uri == viewModel.songToEdit.uriString
 
     Box(
         modifier = Modifier
@@ -81,15 +77,15 @@ fun ChorusEditorOverlay(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    SongCover(song.uriString)
+                    SongCover(viewModel.songToEdit.uriString)
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = song.title,
+                            text = viewModel.songToEdit.title,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = song.artist,
+                            text = viewModel.songToEdit.artist,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -107,9 +103,9 @@ fun ChorusEditorOverlay(
                 Button(
                     onClick = {
                         if (isPreviewPlaying) {
-                            onStop()
+                            viewModel.stopPlayback()
                         } else {
-                            onPreview(startMs.toLong())
+                            viewModel.play(startMs.toInt())
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -146,8 +142,7 @@ fun ChorusEditorOverlay(
                 ) {
                     TextButton(
                         onClick = {
-                            // Revert to original values before canceling
-                            onCancel()
+                            viewModel.setChorusToEdit(null)
                         },
                         modifier = Modifier.weight(1f)
                     ) {
@@ -156,9 +151,8 @@ fun ChorusEditorOverlay(
 
                     Button(
                         onClick = {
-                            // Only save if there are actual changes
                             val updatedChorus = chorus.copy(name = name, startMs = startMs.toLong())
-                            onSave(updatedChorus)
+                            viewModel.saveUpdatedChorus(updatedChorus)
                         },
                         modifier = Modifier.weight(1f)
                     ) {
