@@ -1,5 +1,7 @@
 package com.example.gymtimer2.ui.screens.edit_chorus
 
+import android.health.connect.datatypes.units.Volume
+import android.media.AudioManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -15,7 +17,7 @@ import kotlinx.coroutines.withContext
 
 class EditSongChorusViewModel(
     private val repository: WorkoutRepository,
-    private val playerManager: MusicPlayerManager,
+    val playerManager: MusicPlayerManager,
     val songToEdit: SongModel
 ) : ViewModel() {
 
@@ -34,8 +36,8 @@ class EditSongChorusViewModel(
     }
 
     // Playback functions
-    fun play(startMs: Int = 0) {
-        playerManager.play(songToEdit.uriString, startMs)
+    fun play(startMs: Int = 0, volume: Float? = null) {
+        playerManager.play(songToEdit.uriString, startMs, volume = volume)
     }
     fun stopPlayback() {
         playerManager.stop()
@@ -49,7 +51,8 @@ class EditSongChorusViewModel(
         _chorusToEdit.value = ChorusModel(
             songId = songToEdit.id,
             name = "",
-            startMs = 0
+            startMs = 0,
+            volume = playerManager.audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
         )
     }
     fun saveChorus(
@@ -87,7 +90,7 @@ class EditSongChorusViewModel(
 
     // Chorus card management
     fun playChorus(chorus: ChorusModel) {
-        play(chorus.startMs.toInt())
+        play(chorus.startMs.toInt(), volume = chorus.volume)
     }
     fun setChorusToEdit(chorus: ChorusModel?) {
         _chorusToEdit.value = chorus

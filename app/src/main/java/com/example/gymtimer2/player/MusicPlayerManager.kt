@@ -1,6 +1,7 @@
 package com.example.gymtimer2.player
 
 import android.content.Context
+import android.health.connect.datatypes.units.Volume
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.AudioFocusRequest
@@ -27,7 +28,7 @@ class MusicPlayerManager(
     private val context: Context
 ) {
     private var mediaPlayer: MediaPlayer? = null
-    private val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private var audioFocusRequest: AudioFocusRequest? = null
     private val audioFocusListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
         when (focusChange) {
@@ -50,11 +51,18 @@ class MusicPlayerManager(
     private var previewEndAtMs: Int? = null
     private var delayedPlayerJob: Job? = null
     private var fadeInJob: Job? = null
+    private var previousVolume: Float? = null
 
     private val _playbackState = MutableStateFlow(MusicPlaybackState())
     val playbackState: StateFlow<MusicPlaybackState> = _playbackState.asStateFlow()
 
-    fun play(uri: String, startAtMs: Int = 0, fadeInDurationMs: Int = 0, playForMs: Int? = null) {
+    fun play(
+        uri: String,
+        startAtMs: Int = 0,
+        fadeInDurationMs: Int = 0,
+        volume: Float? = null,
+        playForMs: Int? = null
+    ) {
         // stop any existing playback and request audio focus
         stopInternal()
         fadeInJob?.cancel()
@@ -65,6 +73,8 @@ class MusicPlayerManager(
             _playbackState.value = MusicPlaybackState()
             return
         }
+
+        previousVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
 
         mediaPlayer = MediaPlayer().apply {
             setDataSource(context, uri.toUri())
@@ -80,6 +90,11 @@ class MusicPlayerManager(
             }
             // start with volume at 0 for fade-in
             setVolume(0f, 0f)
+            audioManager.setStreamVolume(
+                AudioManager.STREAM_MUSIC,
+                volume?.toInt() ?: (previousVolume ?: 0).toInt(),
+                0
+            )
             start()
         }
 
@@ -107,7 +122,13 @@ class MusicPlayerManager(
         }
     }
 
-    fun delayedPlay(uri: String, startChorusAtMs: Int = 0, delayMs: Int = 0, playForMs: Int? = null) {
+    fun delayedPlay(
+        uri: String,
+        startChorusAtMs: Int = 0,
+        delayMs: Int = 0,
+        volume: Float? = null,
+        playForMs: Int? = null
+    ) {
         var startAtMs = startChorusAtMs - delayMs
         var silenceDurationMs: Int = 0
 
@@ -123,7 +144,8 @@ class MusicPlayerManager(
                 uri = uri,
                 startAtMs = startAtMs,
                 fadeInDurationMs = startChorusAtMs - startAtMs,
-                playForMs = playForMs
+                playForMs = playForMs,
+                volume = volume
             )
         }
     }
@@ -218,6 +240,12 @@ class MusicPlayerManager(
         abandonAudioFocus()
 
         _playbackState.value = MusicPlaybackState()
+
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            previousVolume?.toInt() ?: audioManager.getStreamVolume(AudioManager.STREAM_MUSIC),
+            0
+        )
     }
 
     private fun updatePlaybackState(

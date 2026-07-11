@@ -112,7 +112,7 @@ fun ChorusEditorOverlay(
                         if (isPreviewPlaying) {
                             viewModel.stopPlayback()
                         } else {
-                            viewModel.play(startMs.toInt())
+                            viewModel.play(startMs.toInt(), chorus.volume)
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -154,6 +154,16 @@ fun ChorusEditorOverlay(
                         text = "Início selecionado: ${formatMillisToMinSec(startMs.toLong())}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    println("Current volume: ${chorus.volume}, Max volume: ${viewModel.playerManager.audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)}")
+
+                    Slider(
+                        value = chorus.volume ?: 0f,
+                        valueRange = 0f..viewModel.playerManager.audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).toFloat(),
+                        onValueChange = { newVolume ->
+                            viewModel.setChorusToEdit(chorus.copy(volume = newVolume))
+                        },
                     )
                 }
 

@@ -29,6 +29,9 @@ data class ChorusEntity(
     val name: String = "",
 
     @ColumnInfo(name = "start_ms")
-    val startMs: Long
+    val startMs: Long,
+
+    @ColumnInfo(name = "volume")
+    val volume: Float? = null
 )
 

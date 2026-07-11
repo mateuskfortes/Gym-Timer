@@ -269,7 +269,8 @@ class FloatTimerController {
                     playerManager.delayedPlay(
                         randomChorus.song.uriString,
                         randomChorus.chorus.startMs.toInt(),
-                        workoutExercise.exercise.chorusDelay.toInt()
+                        workoutExercise.exercise.chorusDelay.toInt(),
+                        volume = randomChorus.chorus.volume
                     )
                 }
             }

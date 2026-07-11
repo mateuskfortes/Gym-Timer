@@ -8,7 +8,8 @@ fun ChorusEntity.toModel(): ChorusModel {
         id = id,
         songId = songId,
         name = name,
-        startMs = startMs
+        startMs = startMs,
+        volume = volume
     )
 }
 
@@ -17,7 +18,8 @@ fun ChorusModel.toEntity(): ChorusEntity {
         id = id,
         songId = songId,
         name = name,
-        startMs = startMs
+        startMs = startMs,
+        volume = volume
     )
 }
 

@@ -27,11 +27,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.gymtimer2"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -74,6 +73,24 @@ android {
         compose = true
         viewBinding = true
         buildConfig = true
+    }
+
+    flavorDimensions += "environment"
+
+    productFlavors {
+
+        create("dev") {
+            dimension = "environment"
+
+            applicationId = "com.example.gymtimer.dev"
+            versionNameSuffix = "-dev"
+        }
+
+        create("prod") {
+            dimension = "environment"
+
+            applicationId = "com.example.gymtimer2"
+        }
     }
 }
 
