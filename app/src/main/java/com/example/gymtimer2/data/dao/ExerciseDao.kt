@@ -24,4 +24,7 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercises")
     fun getAllExercises(): Flow<List<ExerciseEntity>>
 
+    @Query("UPDATE exercises SET weight = :weight WHERE id = :exerciseId")
+    suspend fun updateWeight(exerciseId: Int, weight: Int): Int
+
 }

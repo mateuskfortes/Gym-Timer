@@ -17,4 +17,32 @@
     <string name="add_exercise_rest_label">Descanso (segundos)</string>
 
     <string name="edit_exercise_title">Editar exercício</string>
+    <string name="workout_days_title">Dias de treino</string>
+    <string name="workout_day_label">Dia de treino</string>
+    <string name="create_day">Criar dia</string>
+    <string name="rename_day">Renomear dia</string>
+    <string name="delete_day">Excluir dia</string>
+    <string name="delete_day_confirmation">Excluir %1$s?</string>
+    <string name="day_name">Nome do dia</string>
+    <string name="no_exercise_in_day">Nenhum exercício neste dia.</string>
+    <string name="reorder_exercise">Arrastar para ordenar exercício</string>
+    <string name="finish_set_title">Série concluída</string>
+    <string name="current_weight_format">Peso atual: %1$s</string>
+    <string name="new_weight_hint">Novo peso (opcional)</string>
+    <string name="keep_exercise">Manter</string>
+    <string name="next_exercise">Próximo</string>
+    <string name="finish_workout">Concluir treino</string>
+    <string name="invalid_weight">Informe um peso inteiro válido.</string>
+    <string name="loading_exercise">Carregando...</string>
+    <string name="loading_content">Carregando…</string>
+    <string name="load_day_failed">Não foi possível carregar os exercícios deste dia.</string>
+    <string name="day_not_found">Dia de treino inexistente.</string>
+    <string name="day_name_required">Informe o nome do dia.</string>
+    <string name="duplicate_day_name">Já existe um dia com esse nome.</string>
+    <string name="last_day_required">Mantenha ao menos um dia de treino.</string>
+    <string name="day_not_empty">Mova os exercícios antes de excluir o dia.</string>
+    <string name="exercise_not_found">Exercício não encontrado.</string>
+    <string name="invalid_exercise_order">Não foi possível salvar a ordem dos exercícios.</string>
+    <string name="exercise_update_failed">Não foi possível atualizar o exercício.</string>
+    <string name="schedule_save_failed">Não foi possível salvar a alteração.</string>
 </resources>

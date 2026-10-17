@@ -5,11 +5,17 @@ import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.provider.MediaStore
 import androidx.core.net.toUri
+import androidx.room.withTransaction
 import com.example.gymtimer2.data.dao.ChorusDao
 import com.example.gymtimer2.data.dao.ExerciseChorusDao
 import com.example.gymtimer2.data.dao.ExerciseDao
+import com.example.gymtimer2.data.dao.ExerciseScheduleDao
 import com.example.gymtimer2.data.dao.SongDao
+import com.example.gymtimer2.data.dao.WorkoutDayDao
+import com.example.gymtimer2.data.database.WorkoutDatabase
 import com.example.gymtimer2.data.entity.ExerciseChorusEntity
+import com.example.gymtimer2.data.entity.ExerciseScheduleEntity
+import com.example.gymtimer2.data.entity.WorkoutDayEntity
 import com.example.gymtimer2.data.mapper.toEntity
 import com.example.gymtimer2.data.mapper.toModel
 import com.example.gymtimer2.data.relation.ExerciseWithChorusesRelation
@@ -17,9 +23,12 @@ import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.ChorusWithSongModel
 import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.ExerciseWithChorusesModel
+import com.example.gymtimer2.domain.model.ScheduledExerciseModel
 import com.example.gymtimer2.domain.model.SongModel
+import com.example.gymtimer2.domain.model.WorkoutDayModel
+import com.example.gymtimer2.domain.model.WorkoutScheduleError
+import com.example.gymtimer2.domain.model.WorkoutScheduleException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class WorkoutRepository(
@@ -27,12 +36,29 @@ class WorkoutRepository(
     private val exerciseDao: ExerciseDao,
     private val songDao: SongDao,
     private val chorusDao: ChorusDao,
-    private val exerciseChorusDao: ExerciseChorusDao
+    private val exerciseChorusDao: ExerciseChorusDao,
+    private val workoutDayDao: WorkoutDayDao,
+    private val exerciseScheduleDao: ExerciseScheduleDao,
+    private val database: WorkoutDatabase
 ) {
 
     val allExercises: Flow<List<ExerciseModel>> =
         exerciseDao.getAllExercises().map { list ->
             list.map { it.toModel() }
+        }
+
+    val workoutDays: Flow<List<WorkoutDayModel>> = workoutDayDao.observeDays().map { days ->
+        days.map { WorkoutDayModel(it.id, it.name) }
+    }
+
+    val scheduledExercises: Flow<List<ScheduledExerciseModel>> =
+        exerciseScheduleDao.observeScheduledExercises().map { rows ->
+            rows.map { row -> ScheduledExerciseModel(row.exercise.toModel(), row.dayId, row.sortOrder) }
+        }
+
+    fun scheduledExercisesForDay(dayId: Long): Flow<List<ScheduledExerciseModel>> =
+        exerciseScheduleDao.observeScheduledExercisesForDay(dayId).map { rows ->
+            rows.map { row -> ScheduledExerciseModel(row.exercise.toModel(), row.dayId, row.sortOrder) }
         }
 
     val savedSongs: Flow<List<SongModel>> = songDao.getAllSongs().map { songs ->
@@ -45,16 +71,87 @@ class WorkoutRepository(
         }
     }
 
-    suspend fun insertExercise(exercise: ExerciseModel): Long {
-        return exerciseDao.insert(exercise.toEntity())
+    suspend fun insertExercise(exercise: ExerciseModel, dayId: Long): Long = database.withTransaction {
+        requireSchedule(workoutDayDao.getById(dayId) != null, WorkoutScheduleError.DAY_NOT_FOUND)
+        val position = exerciseScheduleDao.countInDay(dayId)
+        val id = exerciseDao.insert(exercise.toEntity())
+        exerciseScheduleDao.insert(ExerciseScheduleEntity(id.toInt(), dayId, position))
+        id
     }
 
     suspend fun updateExercise(exercise: ExerciseModel) {
         exerciseDao.update(exercise.toEntity())
     }
 
-    suspend fun deleteExercise(exercise: ExerciseModel) {
+    suspend fun deleteExercise(exercise: ExerciseModel) = database.withTransaction {
+        val dayId = exerciseScheduleDao.dayIdForExercise(exercise.id)
         exerciseDao.delete(exercise.toEntity())
+        if (dayId != null) normalizeOrder(dayId)
+    }
+
+    suspend fun createDay(name: String): Long = database.withTransaction {
+        val cleanName = name.trim()
+        requireSchedule(cleanName.isNotEmpty(), WorkoutScheduleError.DAY_NAME_REQUIRED)
+        requireSchedule(workoutDayDao.countByName(cleanName) == 0, WorkoutScheduleError.DUPLICATE_DAY_NAME)
+        workoutDayDao.insert(WorkoutDayEntity(name = cleanName))
+    }
+
+    suspend fun renameDay(dayId: Long, name: String) = database.withTransaction {
+        val day = workoutDayDao.getById(dayId)
+            ?: throw WorkoutScheduleException(WorkoutScheduleError.DAY_NOT_FOUND)
+        val cleanName = name.trim()
+        requireSchedule(cleanName.isNotEmpty(), WorkoutScheduleError.DAY_NAME_REQUIRED)
+        if (!day.name.equals(cleanName, ignoreCase = true)) {
+            requireSchedule(workoutDayDao.countByName(cleanName) == 0, WorkoutScheduleError.DUPLICATE_DAY_NAME)
+        }
+        workoutDayDao.update(day.copy(name = cleanName))
+    }
+
+    suspend fun deleteDay(dayId: Long) = database.withTransaction {
+        val day = workoutDayDao.getById(dayId) ?: return@withTransaction
+        requireSchedule(workoutDayDao.count() > 1, WorkoutScheduleError.LAST_DAY)
+        requireSchedule(exerciseScheduleDao.countInDay(dayId) == 0, WorkoutScheduleError.DAY_NOT_EMPTY)
+        workoutDayDao.delete(day)
+    }
+
+    suspend fun moveExercise(exerciseId: Int, targetDayId: Long) = database.withTransaction {
+        requireSchedule(workoutDayDao.getById(targetDayId) != null, WorkoutScheduleError.DAY_NOT_FOUND)
+        val sourceDayId = exerciseScheduleDao.dayIdForExercise(exerciseId)
+            ?: throw WorkoutScheduleException(WorkoutScheduleError.EXERCISE_NOT_FOUND)
+        if (sourceDayId == targetDayId) return@withTransaction
+        exerciseScheduleDao.move(exerciseId, targetDayId, exerciseScheduleDao.countInDay(targetDayId))
+        normalizeOrder(sourceDayId)
+    }
+
+    suspend fun reorderExercises(dayId: Long, orderedIds: List<Int>) = database.withTransaction {
+        val currentIds = exerciseScheduleDao.orderedExerciseIds(dayId)
+        requireSchedule(
+            currentIds.size == orderedIds.size && currentIds.toSet() == orderedIds.toSet(),
+            WorkoutScheduleError.INVALID_ORDER
+        )
+        orderedIds.forEachIndexed { index, exerciseId ->
+            exerciseScheduleDao.updateOrder(exerciseId, index)
+        }
+    }
+
+    suspend fun updateExerciseWeight(exerciseId: Int, weight: Int) {
+        requireSchedule(weight >= 0, WorkoutScheduleError.INVALID_WEIGHT)
+        requireSchedule(exerciseDao.updateWeight(exerciseId, weight) == 1, WorkoutScheduleError.EXERCISE_NOT_FOUND)
+    }
+
+    suspend fun orderedExerciseIdsFrom(exerciseId: Int): List<Int> = database.withTransaction {
+        val dayId = exerciseScheduleDao.dayIdForExercise(exerciseId) ?: return@withTransaction emptyList()
+        exerciseScheduleDao.orderedExerciseIds(dayId).dropWhile { it != exerciseId }
+    }
+
+    private suspend fun normalizeOrder(dayId: Long) {
+        exerciseScheduleDao.orderedExerciseIds(dayId).forEachIndexed { index, exerciseId ->
+            exerciseScheduleDao.updateOrder(exerciseId, index)
+        }
+    }
+
+    private fun requireSchedule(condition: Boolean, error: WorkoutScheduleError) {
+        if (!condition) throw WorkoutScheduleException(error)
     }
 
     // Returns a list of songs available on the device, not saved in the app's database
@@ -186,7 +283,7 @@ class WorkoutRepository(
         }
     }
 
-    fun getExerciseWithChorusesByExerciseId(exerciseId: Int): Flow<ExerciseWithChorusesModel> {
-        return chorusDao.getExerciseWithChorusesByExerciseId(exerciseId).map { it.toModel() }
+    fun getExerciseWithChorusesByExerciseId(exerciseId: Int): Flow<ExerciseWithChorusesModel?> {
+        return chorusDao.getExerciseWithChorusesByExerciseId(exerciseId).map { it?.toModel() }
     }
 }

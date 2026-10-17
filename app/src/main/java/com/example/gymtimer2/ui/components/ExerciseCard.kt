@@ -31,7 +31,8 @@ fun ExerciseCard(
     modifier: Modifier,
     onEdit: (ExerciseModel) -> Unit,
     onDelete: (ExerciseModel) -> Unit,
-    onStart: () -> Unit
+    onStart: () -> Unit,
+    dragHandle: @Composable () -> Unit = {}
 ) {
 
     Card(
@@ -49,7 +50,7 @@ fun ExerciseCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
-                modifier = modifier
+                modifier = Modifier
                     .padding(vertical = 16.dp)
                     .padding(start = 16.dp)
                     .weight(1f),
@@ -80,9 +81,10 @@ fun ExerciseCard(
                 )
             }
             Column(
-                modifier = modifier.padding(16.dp),
+                modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                dragHandle()
                 IconButton(onClick = { onDelete(exercise) }) {
                     Icon(
                         imageVector = Icons.Filled.Delete,

@@ -16,11 +16,13 @@ import androidx.lifecycle.viewmodel.compose.saveable
 import com.example.gymtimer2.data.repository.WorkoutRepository
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.domain.model.ScheduledExerciseModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.domain.model.WeightModel
 import com.example.gymtimer2.domain.model.WeightUnit
 import com.example.gymtimer2.player.MusicPlayerManager
+import com.example.gymtimer2.util.secondsToMillisOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +36,15 @@ class EditExerciseViewModel(
     private val repository: WorkoutRepository,
     private val playerManager: MusicPlayerManager
 ) : ViewModel() {
+
+    val days = repository.workoutDays
+
+    var selectedDayId by savedStateHandle.saveable { mutableStateOf<Long?>(null) }
+        private set
+
+    fun selectDay(dayId: Long) {
+        selectedDayId = dayId
+    }
 
     private var id: Int by Delegates.notNull()
 
@@ -96,7 +107,9 @@ class EditExerciseViewModel(
         }
     }
 
-    fun loadExercise(exercise: ExerciseModel) {
+    fun loadExercise(scheduled: ScheduledExerciseModel) {
+        val exercise = scheduled.exercise
+        selectedDayId = scheduled.dayId
         id = exercise.id
         name = exercise.name
         weight = exercise.weight.value.toString()
@@ -216,22 +229,25 @@ class EditExerciseViewModel(
             return@launch
         }
 
-        val restMs = trimmedRest.toLongOrNull()?.let { it * 1000 } ?: return@launch
+        val parsedWeight = trimmedWeight.toIntOrNull() ?: return@launch
+        val restMs = secondsToMillisOrNull(trimmedRest) ?: return@launch
         val trimmedChorus = chorusDelay.trim()
-        val chorusDelayMs = trimmedChorus.toLongOrNull()?.let { it * 1000 } ?: 0L
+        val chorusDelayMs = secondsToMillisOrNull(trimmedChorus) ?: return@launch
 
         repository.updateExercise(
             ExerciseModel(
                 id = id,
                 name = trimmedName,
                 weight = WeightModel(
-                    value = trimmedWeight.toInt(),
+                    value = parsedWeight,
                     unit = weightUnit,
                 ),
                 restPeriod = restMs,
                 chorusDelay = chorusDelayMs
             )
         )
+
+        selectedDayId?.let { repository.moveExercise(id, it) }
 
         goBack()
     }

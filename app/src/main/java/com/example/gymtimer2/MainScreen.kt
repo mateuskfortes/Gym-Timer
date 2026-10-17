@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.domain.model.ScheduledExerciseModel
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.ui.screens.add_exercise.AddExerciseScreen
 import com.example.gymtimer2.ui.screens.edit_exercise.EditExerciseScreen
@@ -46,7 +47,8 @@ fun MainScreen(
     )
 
     var selectedIndex by remember { mutableIntStateOf(initialIndex) }
-    var exerciseToEdit by remember { mutableStateOf<ExerciseModel?>(null) }
+    var exerciseToEdit by remember { mutableStateOf<ScheduledExerciseModel?>(null) }
+    var selectedDayId by remember { mutableStateOf<Long?>(null) }
     var songToEdit by remember { mutableStateOf<SongModel?>(null) }
 
     Scaffold(
@@ -78,6 +80,8 @@ fun MainScreen(
         when (selectedIndex) {
             0 -> ExerciseListScreen(
                 modifier = Modifier.padding(innerPadding),
+                selectedDayId = selectedDayId,
+                onSelectDay = { selectedDayId = it },
                 onOpenOverlayClick = onOpenOverlayClick,
                 onEditExercise = { exercise ->
                     exerciseToEdit = exercise
@@ -86,6 +90,7 @@ fun MainScreen(
             )
             1 -> AddExerciseScreen(
                 modifier = Modifier.padding(innerPadding),
+                initialDayId = selectedDayId,
                 goBack = {
                     selectedIndex = 0
                 }
@@ -107,7 +112,7 @@ fun MainScreen(
             )
             10 -> EditExerciseScreen(
                 modifier = Modifier.padding(innerPadding),
-                exerciseToEdit = exerciseToEdit!!,
+                scheduledExercise = exerciseToEdit!!,
                 goBack = {
                     exerciseToEdit = null
                     selectedIndex = 0

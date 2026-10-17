@@ -10,11 +10,11 @@ import com.example.gymtimer2.timer_overlay_service.startOverlay
 import com.example.gymtimer2.ui.theme.GymTimerTheme
 
 class MainActivity : ComponentActivity() {
-    private var overlayPermissionRequested = false
-    private var pendingOpenOverlay = false
+    private var pendingExerciseId: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pendingExerciseId = savedInstanceState?.getInt("pending_exercise_id")?.takeIf { it > 0 }
 
         enableEdgeToEdge()
 
@@ -25,8 +25,7 @@ class MainActivity : ComponentActivity() {
                         if (canDrawOverlays(this)) {
                             startOverlay(this, exerciseId)
                         } else {
-                            pendingOpenOverlay = true
-                            overlayPermissionRequested = true
+                            pendingExerciseId = exerciseId
                             requestOverlayPermission(this)
                         }
                     },
@@ -38,11 +37,15 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
 
-        if (overlayPermissionRequested && pendingOpenOverlay && canDrawOverlays(this)) {
-            startOverlay(this, 1
-            )
-            overlayPermissionRequested = false
-            pendingOpenOverlay = false
+        val exerciseId = pendingExerciseId
+        if (exerciseId != null && canDrawOverlays(this)) {
+            pendingExerciseId = null
+            startOverlay(this, exerciseId)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        pendingExerciseId?.let { outState.putInt("pending_exercise_id", it) }
+        super.onSaveInstanceState(outState)
     }
 }

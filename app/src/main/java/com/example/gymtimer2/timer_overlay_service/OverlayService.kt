@@ -20,7 +20,7 @@ class OverlayService : Service() {
         @Volatile
         var isClosing = false
     }
-    private lateinit var floatTimerController: FloatTimerController
+    private var floatTimerController: FloatTimerController? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -34,7 +34,12 @@ class OverlayService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        floatTimerController?.hide()
         val exerciseId = intent.getIntExtra(EXTRA_EXERCISE_ID, -1)
+        if (exerciseId <= 0) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
         floatTimerController = FloatTimerController(
             applicationContext,
             getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater,
@@ -43,12 +48,13 @@ class OverlayService : Service() {
             onClose = { stopService() }
         )
 
-        floatTimerController.show()
-        return START_REDELIVER_INTENT
+        floatTimerController?.show()
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
-        floatTimerController.hide()
+        floatTimerController?.hide()
+        floatTimerController = null
         isRunning = false
         isClosing = false
         stopForeground(STOP_FOREGROUND_REMOVE)

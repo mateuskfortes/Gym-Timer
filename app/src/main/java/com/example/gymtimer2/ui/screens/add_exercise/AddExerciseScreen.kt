@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,11 +30,13 @@ import com.example.gymtimer2.GymApplication
 import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.WeightUnit
 import com.example.gymtimer2.ui.components.WeightUnitChip
+import com.example.gymtimer2.ui.components.WorkoutDaySelector
 import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
 
 @Composable
 fun AddExerciseScreen(
     modifier: Modifier = Modifier,
+    initialDayId: Long? = null,
     goBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -47,8 +50,13 @@ fun AddExerciseScreen(
     )
 
     val selectedChorusIds by viewModel.selectedChorusIds.collectAsState()
+    val days by viewModel.days.collectAsState(initial = emptyList())
     val allSongsWithChoruses by viewModel.allSongsWithChoruses.collectAsState()
     var showChorusModal by remember { mutableStateOf(false) }
+
+    LaunchedEffect(days, initialDayId) {
+        viewModel.selectInitialDay(days, initialDayId)
+    }
 
     if (showChorusModal) {
         SelectChorusesModal(
@@ -74,6 +82,9 @@ fun AddExerciseScreen(
             text = stringResource(R.string.add_exercise_title),
             style = MaterialTheme.typography.headlineSmall
         )
+
+        Text(stringResource(R.string.workout_day_label))
+        WorkoutDaySelector(days, viewModel.selectedDayId, viewModel::selectDay)
 
         OutlinedTextField(
             value = viewModel.name,

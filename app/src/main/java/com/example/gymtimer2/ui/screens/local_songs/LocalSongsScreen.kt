@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -45,6 +44,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gymtimer2.GymApplication
+import com.example.gymtimer2.ui.components.LoadingScreen
 import com.example.gymtimer2.ui.components.music.MusicPermissionGate
 import com.example.gymtimer2.ui.screens.local_songs.components.SongCard
 import com.example.gymtimer2.util.requiredAudioPermission
@@ -138,14 +138,7 @@ fun LocalSongsScreen(
             ) { innerPadding ->
                 when {
                     uiState.isLoading -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(innerPadding),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
+                        LoadingScreen(modifier = Modifier.padding(innerPadding))
                     }
 
                     uiState.error != null -> {

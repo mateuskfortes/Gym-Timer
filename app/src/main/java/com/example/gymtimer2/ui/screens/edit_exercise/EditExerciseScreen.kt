@@ -33,13 +33,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gymtimer2.GymApplication
 import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.domain.model.ScheduledExerciseModel
+import com.example.gymtimer2.ui.components.WorkoutDaySelector
 import com.example.gymtimer2.ui.components.chorus.ExerciseChorusCard
 import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
 
 @Composable
 fun EditExerciseScreen(
     modifier: Modifier = Modifier,
-    exerciseToEdit: ExerciseModel,
+    scheduledExercise: ScheduledExerciseModel,
     goBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -58,11 +60,12 @@ fun EditExerciseScreen(
     val associatedChoruses by viewModel.associatedChoruses.collectAsState()
     val allSongsWithChoruses by viewModel.allSongsWithChoruses.collectAsState()
     val selectedChorusIds by viewModel.selectedChorusIds.collectAsState()
+    val days by viewModel.days.collectAsState(initial = emptyList())
 
     var showSelectModal by remember { mutableStateOf(false) }
 
-    LaunchedEffect(exerciseToEdit.id) {
-        viewModel.loadExercise(exerciseToEdit)
+    LaunchedEffect(scheduledExercise.exercise.id) {
+        viewModel.loadExercise(scheduledExercise)
     }
 
     if (showSelectModal) {
@@ -89,6 +92,9 @@ fun EditExerciseScreen(
             style = MaterialTheme.typography.headlineSmall
         )
 
+        Text(stringResource(R.string.workout_day_label))
+        WorkoutDaySelector(days, viewModel.selectedDayId, viewModel::selectDay)
+
         OutlinedTextField(
             value = viewModel.name,
             onValueChange = viewModel::onNameChange,
@@ -102,7 +108,7 @@ fun EditExerciseScreen(
             onValueChange = viewModel::onWeightChange,
             modifier = Modifier.fillMaxWidth(),
             label = { Text(stringResource(
-                R.string.add_exercise_weight_label) + " (${exerciseToEdit.weight.unit.label})"
+                R.string.add_exercise_weight_label) + " (${scheduledExercise.exercise.weight.unit.label})"
             ) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(

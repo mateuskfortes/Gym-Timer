@@ -12,12 +12,17 @@ class AppContainer(context: Context) {
     private val songDao = database.songDao()
     private val chorusDao = database.chorusDao()
     private val exerciseChorusDao = database.exerciseChorusDao()
+    private val workoutDayDao = database.workoutDayDao()
+    private val exerciseScheduleDao = database.exerciseScheduleDao()
 
     val workoutRepository = WorkoutRepository(
         context = context.applicationContext,
         exerciseDao = exerciseDao,
         songDao = songDao,
         chorusDao = chorusDao,
-        exerciseChorusDao = exerciseChorusDao
+        exerciseChorusDao = exerciseChorusDao,
+        workoutDayDao = workoutDayDao,
+        exerciseScheduleDao = exerciseScheduleDao,
+        database = database
     )
 }

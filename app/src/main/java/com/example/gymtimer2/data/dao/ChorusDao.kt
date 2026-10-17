@@ -44,7 +44,7 @@ interface ChorusDao {
         SELECT * FROM exercises
         WHERE id = :exerciseId
     """)
-    fun getExerciseWithChorusesByExerciseId(exerciseId: Int): Flow<ExerciseWithChorusesRelation>
+    fun getExerciseWithChorusesByExerciseId(exerciseId: Int): Flow<ExerciseWithChorusesRelation?>
 
     @Query("DELETE FROM choruses WHERE song_id = :songId")
     suspend fun deleteChorusesBySongId(songId: Long)
