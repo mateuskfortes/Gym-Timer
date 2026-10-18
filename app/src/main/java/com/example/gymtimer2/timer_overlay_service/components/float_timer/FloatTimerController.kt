@@ -139,9 +139,23 @@ class FloatTimerController(
         if (state != WorkoutState.ON_SET) return
         playerManager.stop()
         state = WorkoutState.FINISH_PROMPT
-        runCatching {
-            finishDialog.show(exercise, sequence.hasNext)
-        }.onFailure { onClose() }
+        scope.launch {
+            try {
+                val nextExercise = sequence.nextId?.let { nextId ->
+                    repository.getExerciseWithChorusesByExerciseId(nextId).first()
+                }
+                finishDialog.show(
+                    exercise = exercise,
+                    nextExerciseName = nextExercise?.exercise?.name,
+                    hasNext = sequence.hasNext,
+                    canSkipNext = sequence.canSkipNext && nextExercise != null
+                )
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                onClose()
+            }
+        }
     }
 
     private fun onFinishSelection(action: FinishSetAction, newWeight: Int?) {
@@ -162,6 +176,10 @@ class FloatTimerController(
                         startRest()
                     }
                     FinishSetAction.NEXT_OR_FINISH -> advanceOrClose()
+                    FinishSetAction.SKIP_NEXT -> {
+                        sequence.skipNext()
+                        advanceOrClose()
+                    }
                 }
             } catch (exception: CancellationException) {
                 throw exception

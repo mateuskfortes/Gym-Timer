@@ -56,6 +56,7 @@ fun EditSongChorusScreen(
     val context = LocalContext.current
     val app = context.applicationContext as GymApplication
     val viewModel: EditSongChorusViewModel = viewModel(
+        key = "edit_song_chorus_${songToEdit.id}",
         factory = EditSongChorusViewModel.factory(
             repository = app.container.workoutRepository,
             playerManager = app.musicPlayerManager,

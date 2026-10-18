@@ -28,7 +28,7 @@ Aplicativo Android para cadastrar exercícios, definir descanso e associar trech
    ./gradlew :app:assembleDevDebug
    ```
 
-O flavor `dev` usa o ID `com.example.gymtimer.dev`; `prod` usa `com.example.gymtimer2`. O banco tem nomes diferentes em builds debug e não debug. O app usa banco local Room e músicas do MediaStore do dispositivo; não há servidor configurado.
+O flavor `dev` usa o ID `com.example.gymtimer.dev` e aparece no launcher como **Gym Timer (Desenvolvimento)**, com ícone laranja; `prod` usa o ID `com.example.gymtimer2` e mantém o ícone original. O script `./run-app.sh` instala a variante `devDebug`. O banco tem nomes diferentes em builds debug e não debug. O app usa banco local Room e músicas do MediaStore do dispositivo; não há servidor configurado.
 
 ## Verificação estática
 

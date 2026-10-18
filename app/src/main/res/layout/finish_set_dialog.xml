@@ -31,6 +31,15 @@
         android:layout_marginTop="4dp"
         android:textColor="@color/app_text_muted" />
 
+    <TextView
+        android:id="@+id/nextExercise"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textColor="@color/app_text_muted" />
+
     <EditText
         android:id="@+id/newWeight"
         android:layout_width="match_parent"
@@ -52,6 +61,18 @@
         android:layout_height="wrap_content"
         android:textColor="@color/app_error"
         android:visibility="gone" />
+
+    <Button
+        android:id="@+id/skipNextButton"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/app_secondary_button_background"
+        android:minHeight="48dp"
+        android:text="@string/skip_next_exercise"
+        android:textAllCaps="false"
+        android:textColor="@color/app_text" />
 
     <LinearLayout
         style="?android:attr/buttonBarStyle"

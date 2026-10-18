@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -61,6 +62,7 @@ fun MainScreen(
 ) {
     val mainScreenViewModel: MainScreenViewModel = viewModel()
     val uiState by mainScreenViewModel.uiState.collectAsStateWithLifecycle()
+    val saveableStateHolder = rememberSaveableStateHolder()
 
     val navItemList = listOf(
         NavItem(stringResource(R.string.nav_exercises), Icons.Default.Home, Exercises),
@@ -103,15 +105,17 @@ fun MainScreen(
         }
     ) { innerPadding ->
         when (val destination = uiState.destination) {
-            Exercises -> ExerciseListScreen(
-                modifier = Modifier.padding(innerPadding),
-                selectedDayId = uiState.selectedDayId,
-                onSelectDay = mainScreenViewModel::selectDay,
-                onOpenOverlayClick = onOpenOverlayClick,
-                onEditExercise = { exercise ->
-                    mainScreenViewModel.navigateTo(EditExercise(exercise))
-                },
-            )
+            Exercises -> saveableStateHolder.SaveableStateProvider("exercise_list") {
+                ExerciseListScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    selectedDayId = uiState.selectedDayId,
+                    onSelectDay = mainScreenViewModel::selectDay,
+                    onOpenOverlayClick = onOpenOverlayClick,
+                    onEditExercise = { exercise ->
+                        mainScreenViewModel.navigateTo(EditExercise(exercise))
+                    },
+                )
+            }
             AddExercise -> AddExerciseScreen(
                 modifier = Modifier.padding(innerPadding),
                 initialDayId = uiState.selectedDayId,

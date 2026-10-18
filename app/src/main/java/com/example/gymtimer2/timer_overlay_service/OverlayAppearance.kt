@@ -39,12 +39,15 @@ class OverlayAppearance(context: Context, settings: AppSettings) {
         }
         setTextColors(binding.dialogRoot)
         binding.currentWeight.setTextColor(mutedText)
+        binding.nextExercise.setTextColor(mutedText)
         binding.newWeight.setTextColor(text)
         binding.newWeight.setHintTextColor(mutedText)
         binding.errorText.setTextColor(if (dark) 0xFFFF453A.toInt() else 0xFFFF3B30.toInt())
         binding.newWeight.background = rounded(surfaceVariant, radiusPx * 0.67f)
         binding.keepButton.background = buttonBackground(surfaceVariant)
         binding.keepButton.setTextColor(text)
+        binding.skipNextButton.background = buttonBackground(surfaceVariant)
+        binding.skipNextButton.setTextColor(text)
         binding.nextButton.background = buttonBackground(accent)
         binding.nextButton.setTextColor(onAccent)
     }

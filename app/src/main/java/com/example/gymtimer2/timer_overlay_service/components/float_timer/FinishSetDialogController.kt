@@ -13,7 +13,7 @@ import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.timer_overlay_service.OverlayAppearance
 import com.example.gymtimer2.timer_overlay_service.overlayWindowType
 
-enum class FinishSetAction { KEEP, NEXT_OR_FINISH }
+enum class FinishSetAction { KEEP, NEXT_OR_FINISH, SKIP_NEXT }
 
 class FinishSetDialogController(
     private val context: Context,
@@ -39,16 +39,31 @@ class FinishSetDialogController(
         softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
     }
 
-    fun show(exercise: ExerciseModel, hasNext: Boolean) {
+    fun show(
+        exercise: ExerciseModel,
+        nextExerciseName: String?,
+        hasNext: Boolean,
+        canSkipNext: Boolean
+    ) {
         if (isVisible) return
         binding.exerciseName.text = exercise.name
         binding.currentWeight.text = context.getString(R.string.current_weight_format, exercise.weight.plainText)
+        binding.nextExercise.visibility = if (nextExerciseName == null) View.GONE else View.VISIBLE
+        nextExerciseName?.let {
+            binding.nextExercise.text = context.getString(R.string.next_exercise_name_format, it)
+        }
+        binding.skipNextButton.visibility = if (canSkipNext && nextExerciseName != null) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
         binding.newWeight.text.clear()
         binding.errorText.visibility = View.GONE
         binding.nextButton.setText(if (hasNext) R.string.next_exercise else R.string.finish_workout)
         setSubmitting(false)
         binding.keepButton.setOnClickListener { submit(FinishSetAction.KEEP) }
         binding.nextButton.setOnClickListener { submit(FinishSetAction.NEXT_OR_FINISH) }
+        binding.skipNextButton.setOnClickListener { submit(FinishSetAction.SKIP_NEXT) }
         binding.dialogRoot.setOnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
                 submit(FinishSetAction.KEEP)
@@ -87,5 +102,6 @@ class FinishSetDialogController(
     private fun setSubmitting(submitting: Boolean) {
         binding.keepButton.isEnabled = !submitting
         binding.nextButton.isEnabled = !submitting
+        binding.skipNextButton.isEnabled = !submitting
     }
 }

@@ -68,6 +68,8 @@
     <string name="new_weight_hint">Novo peso (opcional)</string>
     <string name="keep_exercise">Manter</string>
     <string name="next_exercise">Próximo</string>
+    <string name="next_exercise_name_format">Próximo exercício: %1$s</string>
+    <string name="skip_next_exercise">Pular próximo exercício</string>
     <string name="finish_workout">Concluir treino</string>
     <string name="invalid_weight">Informe um peso inteiro válido.</string>
     <string name="loading_exercise">Carregando...</string>
