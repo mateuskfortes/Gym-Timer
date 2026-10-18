@@ -27,9 +27,23 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.ui.theme.LocalAppStyle
+
+@Composable
+fun ScreenTitle(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+        color = MaterialTheme.colorScheme.onBackground
+    )
+}
 
 fun Modifier.softCardShadow(
     shape: Shape? = null,

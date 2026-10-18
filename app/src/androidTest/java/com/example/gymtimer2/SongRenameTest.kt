@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SongRenameTest {
     @Test
-    fun renameSongPersistsTrimmedTitle() = runBlocking {
+    fun updateSongDetailsPersistsTrimmedTitleAndArtist() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val database = Room.inMemoryDatabaseBuilder(context, WorkoutDatabase::class.java).build()
         try {
@@ -29,8 +29,10 @@ class SongRenameTest {
                 listOf(SongModel(id = 7, title = "Original", artist = "Artist", uriString = "content://song/7"))
             )
 
-            assertTrue(repository.renameSong(7, "  Nome atualizado  "))
-            assertEquals("Nome atualizado", repository.savedSongs.first().single().title)
+            assertTrue(repository.updateSongDetails(7, "  Nome atualizado  ", "  Artista atualizado  "))
+            val savedSong = repository.savedSongs.first().single()
+            assertEquals("Nome atualizado", savedSong.title)
+            assertEquals("Artista atualizado", savedSong.artist)
         } finally {
             database.close()
         }

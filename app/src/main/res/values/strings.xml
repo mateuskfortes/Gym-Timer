@@ -29,9 +29,13 @@
     <string name="save_button">Salvar</string>
     <string name="save_selection">Salvar seleção</string>
     <string name="saving_selection">Salvando…</string>
-    <string name="edit_song_name">Editar nome da música</string>
+    <string name="edit_song_details">Editar nome e artista da música</string>
+    <string name="edit_song_details_title">Editar música</string>
     <string name="song_name_label">Nome da música</string>
-    <string name="edit_song_name_failed">Não foi possível atualizar o nome da música.</string>
+    <string name="song_artist_label">Artista</string>
+    <string name="edit_song_details_failed">Não foi possível atualizar os dados da música.</string>
+    <string name="play_song_playback">Tocar música inteira</string>
+    <string name="stop_song_playback">Parar música</string>
 
     <string name="cd_delete_exercise">Excluir exercício</string>
     <string name="cd_edit_exercise">Editar exercício</string>
@@ -47,6 +51,7 @@
     <string name="add_chorus_button">Adicionar</string>
 
     <string name="edit_exercise_title">Editar exercício</string>
+    <string name="workout_days_title">Dias de treino</string>
     <string name="workout_day_label">Dia de treino</string>
     <string name="create_day">Criar dia</string>
     <string name="rename_day">Renomear dia</string>

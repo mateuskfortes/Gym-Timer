@@ -46,23 +46,27 @@ class EditSongChorusViewModel(
         playerManager.stop()
     }
 
-    fun renameSong(title: String, onDone: (Boolean) -> Unit) {
+    fun updateSongDetails(title: String, artist: String, onDone: (Boolean) -> Unit) {
         val normalizedTitle = title.trim()
         if (normalizedTitle.isEmpty()) {
             onDone(false)
             return
         }
+        val normalizedArtist = artist.trim()
 
         viewModelScope.launch {
-            val renamed = withContext(Dispatchers.IO) {
+            val updated = withContext(Dispatchers.IO) {
                 runCatching {
-                    repository.renameSong(songToEdit.id, normalizedTitle)
+                    repository.updateSongDetails(songToEdit.id, normalizedTitle, normalizedArtist)
                 }.getOrDefault(false)
             }
-            if (renamed) {
-                _songToEdit.value = songToEdit.copy(title = normalizedTitle)
+            if (updated) {
+                _songToEdit.value = songToEdit.copy(
+                    title = normalizedTitle,
+                    artist = normalizedArtist
+                )
             }
-            onDone(renamed)
+            onDone(updated)
         }
     }
 

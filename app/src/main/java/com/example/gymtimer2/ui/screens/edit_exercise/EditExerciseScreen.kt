@@ -31,6 +31,7 @@ import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.ScheduledExerciseModel
 import com.example.gymtimer2.ui.components.WorkoutDaySelector
 import com.example.gymtimer2.ui.components.PrimaryButton
+import com.example.gymtimer2.ui.components.ScreenTitle
 import com.example.gymtimer2.ui.components.AppTextField
 import com.example.gymtimer2.ui.components.SecondaryButton
 import com.example.gymtimer2.ui.components.chorus.ExerciseChorusSection
@@ -87,10 +88,7 @@ fun EditExerciseScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = stringResource(R.string.edit_exercise_title),
-            style = MaterialTheme.typography.headlineSmall
-        )
+        ScreenTitle(stringResource(R.string.edit_exercise_title))
 
         Text(stringResource(R.string.workout_day_label))
         WorkoutDaySelector(days, viewModel.selectedDayId, viewModel::selectDay)

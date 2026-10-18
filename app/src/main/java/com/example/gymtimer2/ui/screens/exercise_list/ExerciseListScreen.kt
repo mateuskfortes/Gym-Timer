@@ -38,6 +38,7 @@ import com.example.gymtimer2.ui.components.ExerciseCard
 import com.example.gymtimer2.ui.components.LoadingScreen
 import com.example.gymtimer2.ui.components.PrimaryButton
 import com.example.gymtimer2.ui.components.IconActionButton
+import com.example.gymtimer2.ui.components.ScreenTitle
 import com.example.gymtimer2.ui.components.AppTextField
 import com.example.gymtimer2.ui.components.SecondaryButton
 import com.example.gymtimer2.ui.components.softCardShadow
@@ -120,8 +121,12 @@ fun ExerciseListScreen(
     Column(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            ScreenTitle(
+                text = stringResource(R.string.workout_days_title),
+                modifier = Modifier.weight(1f)
+            )
             IconActionButton(onClick = { viewModel.clearError(); showCreateDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_day))
             }
