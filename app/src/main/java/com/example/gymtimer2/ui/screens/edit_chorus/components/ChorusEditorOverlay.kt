@@ -4,7 +4,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,15 +24,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SliderState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
@@ -52,9 +50,7 @@ private val START_MARKER_AREA_HEIGHT = 48.dp
 private val START_MARKER_WIDTH = 12.dp
 private val START_MARKER_HEIGHT = 12.dp
 private val START_MARKER_GAP = 2.dp
-private val PLAYBACK_TRACK_HEIGHT = 16.dp
-private val SLIDER_THUMB_WIDTH = 4.dp
-private const val PLAYBACK_TRACK_VERTICAL_OFFSET_PX = 2
+private val PLAYBACK_TRACK_THICKNESS = 4.dp
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -138,17 +134,12 @@ fun ChorusEditorOverlay(
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(text = "Escolha o início do refrão", style = MaterialTheme.typography.labelMedium)
 
-                    BoxWithConstraints(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(START_MARKER_AREA_HEIGHT)
                     ) {
                         val markerProgress = (chorus.startMs / maxDuration.toFloat()).coerceIn(0f, 1f)
-                        val markerOffsetY = (START_MARKER_AREA_HEIGHT - PLAYBACK_TRACK_HEIGHT) / 2 -
-                            START_MARKER_GAP - START_MARKER_HEIGHT
-                        val trackWidth = maxWidth - SLIDER_THUMB_WIDTH
-                        val markerOffsetX = trackWidth * markerProgress +
-                            SLIDER_THUMB_WIDTH / 2 - START_MARKER_WIDTH / 2
                         val markerColor = MaterialTheme.colorScheme.primary
                         val progressPositionMs = if (isPreviewPlaying) {
                             playbackState.currentPositionMs.toLong()
@@ -165,27 +156,12 @@ fun ChorusEditorOverlay(
                             valueRange = 0f..maxDuration.toFloat(),
                             modifier = Modifier.fillMaxSize(),
                             track = { sliderState ->
-                                SliderDefaults.Track(
+                                ChorusProgressTrack(
                                     sliderState = sliderState,
-                                    modifier = Modifier.offset {
-                                        IntOffset(x = 0, y = PLAYBACK_TRACK_VERTICAL_OFFSET_PX)
-                                    }
+                                    markerProgress = markerProgress,
+                                    markerColor = markerColor
                                 )
                             }
-                        )
-                        StartMarkerTriangle(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .offset(x = markerOffsetX, y = markerOffsetY),
-                            pointsDown = true,
-                            color = markerColor
-                        )
-                        StartMarkerTriangle(
-                            modifier = Modifier
-                                .align(Alignment.BottomStart)
-                                .offset(x = markerOffsetX, y = -markerOffsetY),
-                            pointsDown = false,
-                            color = markerColor
                         )
                     }
                     Text(
@@ -232,24 +208,65 @@ fun ChorusEditorOverlay(
 }
 
 @Composable
-private fun StartMarkerTriangle(
-    modifier: Modifier = Modifier,
-    pointsDown: Boolean,
-    color: Color
+@OptIn(ExperimentalMaterial3Api::class)
+private fun ChorusProgressTrack(
+    sliderState: SliderState,
+    markerProgress: Float,
+    markerColor: Color
 ) {
-    Canvas(modifier = modifier.size(START_MARKER_WIDTH, START_MARKER_HEIGHT)) {
-        val path = Path().apply {
-            if (pointsDown) {
-                moveTo(0f, 0f)
-                lineTo(size.width, 0f)
-                lineTo(size.width / 2f, size.height)
-            } else {
-                moveTo(0f, size.height)
-                lineTo(size.width, size.height)
-                lineTo(size.width / 2f, 0f)
-            }
+    val valueRange = sliderState.valueRange
+    val valueRangeSize = valueRange.endInclusive - valueRange.start
+    val playbackProgress = if (valueRangeSize > 0f) {
+        ((sliderState.value - valueRange.start) / valueRangeSize).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+
+    val inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(START_MARKER_AREA_HEIGHT)
+    ) {
+        val centerY = size.height / 2f
+        val markerCenterX = size.width * markerProgress
+        val trackWidthPx = PLAYBACK_TRACK_THICKNESS.toPx()
+        val markerWidthPx = START_MARKER_WIDTH.toPx()
+        val markerHeightPx = START_MARKER_HEIGHT.toPx()
+        val markerGapPx = START_MARKER_GAP.toPx()
+        val markerHalfWidth = markerWidthPx / 2f
+        val markerTipGap = markerGapPx + trackWidthPx / 2f
+
+        drawLine(
+            color = inactiveTrackColor,
+            start = Offset(0f, centerY),
+            end = Offset(size.width, centerY),
+            strokeWidth = trackWidthPx,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = markerColor,
+            start = Offset(0f, centerY),
+            end = Offset(size.width * playbackProgress, centerY),
+            strokeWidth = trackWidthPx,
+            cap = StrokeCap.Round
+        )
+
+        val upperMarkerPath = Path().apply {
+            moveTo(markerCenterX - markerHalfWidth, centerY - markerTipGap - markerHeightPx)
+            lineTo(markerCenterX + markerHalfWidth, centerY - markerTipGap - markerHeightPx)
+            lineTo(markerCenterX, centerY - markerTipGap)
             close()
         }
-        drawPath(path = path, color = color)
+        val lowerMarkerPath = Path().apply {
+            moveTo(markerCenterX - markerHalfWidth, centerY + markerTipGap + markerHeightPx)
+            lineTo(markerCenterX + markerHalfWidth, centerY + markerTipGap + markerHeightPx)
+            lineTo(markerCenterX, centerY + markerTipGap)
+            close()
+        }
+
+        drawPath(path = upperMarkerPath, color = markerColor)
+        drawPath(path = lowerMarkerPath, color = markerColor)
     }
 }
