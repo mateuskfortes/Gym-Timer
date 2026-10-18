@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -96,7 +96,7 @@ fun SongPlaybackControls(
                 .size(PlaybackButtonSize)
         ) {
             Icon(
-                imageVector = if (isSongPlaying) Icons.Filled.Stop else Icons.Filled.PlayArrow,
+                imageVector = if (isSongPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                 contentDescription = stringResource(
                     if (isSongPlaying) R.string.stop_song_playback else R.string.play_song_playback
                 ),

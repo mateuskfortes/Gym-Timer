@@ -13,7 +13,9 @@ import com.example.gymtimer2.domain.model.ThemeMode
 
 /** Applies the same saved appearance to the XML windows owned by the overlay service. */
 class OverlayAppearance(context: Context, settings: AppSettings) {
-    private val radiusPx = 18f * context.resources.displayMetrics.density
+    private val density = context.resources.displayMetrics.density
+    private val radiusPx = 18f * density
+    private val outlineWidthPx = density.toInt().coerceAtLeast(1)
     private val dark = settings.themeMode == ThemeMode.DARK
     private val accent = settings.accentColor.argb(dark)
     private val surface = if (dark) 0xFF1C1C1E.toInt() else 0xFFFFFFFF.toInt()
@@ -32,7 +34,9 @@ class OverlayAppearance(context: Context, settings: AppSettings) {
     }
 
     fun applyToDialog(binding: FinishSetDialogBinding) {
-        binding.dialogRoot.background = rounded(surface)
+        binding.dialogRoot.background = rounded(surface).apply {
+            setStroke(outlineWidthPx, accent)
+        }
         setTextColors(binding.dialogRoot)
         binding.currentWeight.setTextColor(mutedText)
         binding.newWeight.setTextColor(text)
