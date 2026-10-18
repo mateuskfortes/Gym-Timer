@@ -7,10 +7,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -35,7 +33,7 @@ import com.example.gymtimer2.ui.components.WorkoutDaySelector
 import com.example.gymtimer2.ui.components.PrimaryButton
 import com.example.gymtimer2.ui.components.AppTextField
 import com.example.gymtimer2.ui.components.SecondaryButton
-import com.example.gymtimer2.ui.components.chorus.ExerciseChorusCard
+import com.example.gymtimer2.ui.components.chorus.ExerciseChorusSection
 import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
 
 @Composable
@@ -60,6 +58,7 @@ fun EditExerciseScreen(
     val associatedChoruses by viewModel.associatedChoruses.collectAsState()
     val allSongsWithChoruses by viewModel.allSongsWithChoruses.collectAsState()
     val selectedChorusIds by viewModel.selectedChorusIds.collectAsState()
+    val chorusesLoaded by viewModel.chorusesLoaded.collectAsState()
     val days by viewModel.days.collectAsState(initial = emptyList())
 
     var showSelectModal by remember { mutableStateOf(false) }
@@ -84,6 +83,7 @@ fun EditExerciseScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -142,46 +142,15 @@ fun EditExerciseScreen(
             outlined = true
         )
 
-        // Choruses section
-        HorizontalDivider()
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Refrões (${associatedChoruses.size})",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            SecondaryButton(
-                onClick = { showSelectModal = true }
-            ) {
-                Text("+ Adicionar")
-            }
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(
-                items = associatedChoruses,
-                key = { (_, chorus) -> chorus.id }
-            ) { (song, chorus) ->
-                ExerciseChorusCard(
-                    chorus = chorus,
-                    song = song,
-                    playbackState = if (playbackState.uri == song.uriString) playbackState else com.example.gymtimer2.domain.model.MusicPlaybackState(),
-                    onPlay = { viewModel.playChorus(song, chorus) },
-                    onStop = viewModel::stopPlayback,
-                    onRemove = { viewModel.removeChorusFromExercise(chorus.id) }
-                )
-            }
-        }
+        ExerciseChorusSection(
+            choruses = associatedChoruses,
+            playbackState = playbackState,
+            onAddClick = { showSelectModal = true },
+            onPlay = viewModel::playChorus,
+            onStop = viewModel::stopPlayback,
+            onRemove = viewModel::removeChorusFromExercise,
+            addEnabled = chorusesLoaded
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -198,7 +167,8 @@ fun EditExerciseScreen(
                 onClick = {
                     viewModel.updateExercise(goBack)
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                enabled = chorusesLoaded
             ) {
                 Text(stringResource(R.string.save_button))
             }

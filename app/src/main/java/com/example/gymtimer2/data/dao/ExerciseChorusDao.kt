@@ -16,6 +16,9 @@ interface ExerciseChorusDao {
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
 	suspend fun insert(relation: ExerciseChorusEntity)
 
+	@Insert(onConflict = OnConflictStrategy.IGNORE)
+	suspend fun insertAll(relations: List<ExerciseChorusEntity>)
+
 	@Delete
 	suspend fun delete(relation: ExerciseChorusEntity)
 

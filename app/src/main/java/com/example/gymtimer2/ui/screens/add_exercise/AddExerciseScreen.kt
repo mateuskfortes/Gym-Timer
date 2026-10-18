@@ -34,6 +34,7 @@ import com.example.gymtimer2.ui.components.WorkoutDaySelector
 import com.example.gymtimer2.ui.components.PrimaryButton
 import com.example.gymtimer2.ui.components.LabeledOutlinedTextField
 import com.example.gymtimer2.ui.components.FormFieldLabel
+import com.example.gymtimer2.ui.components.chorus.ExerciseChorusSection
 import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
 
 @Composable
@@ -53,6 +54,8 @@ fun AddExerciseScreen(
     )
 
     val selectedChorusIds by viewModel.selectedChorusIds.collectAsState()
+    val associatedChoruses by viewModel.associatedChoruses.collectAsState()
+    val playbackState by viewModel.playbackState.collectAsState()
     val days by viewModel.days.collectAsState(initial = emptyList())
     val allSongsWithChoruses by viewModel.allSongsWithChoruses.collectAsState()
     var showChorusModal by remember { mutableStateOf(false) }
@@ -154,19 +157,14 @@ fun AddExerciseScreen(
                 )
             )
 
-            if (selectedChorusIds.isNotEmpty()) {
-                Text(
-                    text = "Refrões (${selectedChorusIds.size})",
-                    style = MaterialTheme.typography.titleSmall
-                )
-            }
-
-            PrimaryButton(
-                onClick = { showChorusModal = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("+ Adicionar Refrão")
-            }
+            ExerciseChorusSection(
+                choruses = associatedChoruses,
+                playbackState = playbackState,
+                onAddClick = { showChorusModal = true },
+                onPlay = viewModel::playChorus,
+                onStop = viewModel::stopPlayback,
+                onRemove = viewModel::removeChorusFromExercise
+            )
         }
         PrimaryButton(
             onClick = { viewModel.insertExercise(goBack) },

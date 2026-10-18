@@ -43,6 +43,8 @@
     <string name="weight_unit_label">Unidade de peso</string>
     <string name="add_exercise_rest_label">Descanso (segundos)</string>
     <string name="add_exercise_chorus_delay_label">Delay do refrão (s)</string>
+    <string name="chorus_section_title">Refrões (%1$d)</string>
+    <string name="add_chorus_button">Adicionar</string>
 
     <string name="edit_exercise_title">Editar exercício</string>
     <string name="workout_day_label">Dia de treino</string>

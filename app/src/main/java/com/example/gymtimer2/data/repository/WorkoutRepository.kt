@@ -263,6 +263,15 @@ class WorkoutRepository(
         )
     }
 
+    suspend fun replaceChorusesForExercise(exerciseId: Int, chorusIds: Set<Long>) = database.withTransaction {
+        exerciseChorusDao.deleteByExerciseId(exerciseId)
+        exerciseChorusDao.insertAll(
+            chorusIds.map { chorusId ->
+                ExerciseChorusEntity(exerciseId = exerciseId, chorusId = chorusId)
+            }
+        )
+    }
+
     suspend fun removeChorusFromExercise(exerciseId: Int, chorusId: Long) {
         exerciseChorusDao.deleteByIds(exerciseId, chorusId)
     }

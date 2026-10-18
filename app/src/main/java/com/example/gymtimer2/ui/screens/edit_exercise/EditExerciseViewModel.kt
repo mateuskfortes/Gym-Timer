@@ -37,6 +37,11 @@ class EditExerciseViewModel(
     private val playerManager: MusicPlayerManager
 ) : ViewModel() {
 
+    private data class ActiveChorusPlayback(
+        val chorusId: Long,
+        val songUri: String
+    )
+
     val days = repository.workoutDays
 
     var selectedDayId by savedStateHandle.saveable { mutableStateOf<Long?>(null) }
@@ -59,6 +64,8 @@ class EditExerciseViewModel(
     private var originalChorusDelay: String = ""
 
     private var originalChorusIds: Set<Long> = emptySet()
+
+    private var activeChorusPlayback: ActiveChorusPlayback? = null
 
     var name by savedStateHandle.saveable { mutableStateOf("") }
         private set
@@ -83,10 +90,11 @@ class EditExerciseViewModel(
     private val _allSongsWithChoruses = MutableStateFlow<List<Pair<SongModel, List<ChorusModel>>>>(emptyList())
     val allSongsWithChoruses: StateFlow<List<Pair<SongModel, List<ChorusModel>>>> = _allSongsWithChoruses.asStateFlow()
 
-    private val _exerciseChoruses = MutableStateFlow<List<ChorusModel>>(emptyList())
-
     private val _selectedChorusIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedChorusIds: StateFlow<Set<Long>> = _selectedChorusIds.asStateFlow()
+
+    private val _chorusesLoaded = MutableStateFlow(false)
+    val chorusesLoaded: StateFlow<Boolean> = _chorusesLoaded.asStateFlow()
 
     val playbackState: StateFlow<MusicPlaybackState> = playerManager.playbackState
 
@@ -102,6 +110,7 @@ class EditExerciseViewModel(
         viewModelScope.launch {
             repository.getAllChoruses().collect { allChoruses ->
                 _allChoruses.value = allChoruses
+                refreshAssociatedChoruses()
                 refreshAllSongsWithChoruses()
             }
         }
@@ -120,45 +129,36 @@ class EditExerciseViewModel(
         originalWeight = weight
         originalRestSeconds = restSeconds
         originalChorusDelay = chorusDelay
+        _chorusesLoaded.value = false
 
         viewModelScope.launch {
             val chorusesFlow = repository.getChorusesByExerciseId(exercise.id)
             originalChorusIds = chorusesFlow.first().map { it.id }.toSet()
-
-            chorusesFlow.collect { choruses ->
-                _exerciseChoruses.value = choruses
-                refreshAssociatedChoruses()
-            }
+            _selectedChorusIds.value = originalChorusIds
+            _chorusesLoaded.value = true
+            refreshAssociatedChoruses()
         }
     }
 
-    fun removeChorusFromExercise(chorusId: Long) = viewModelScope.launch {
-        repository.removeChorusFromExercise(id, chorusId)
+    fun removeChorusFromExercise(chorusId: Long) {
+        val activePlayback = activeChorusPlayback
+        if (activePlayback?.chorusId == chorusId && playbackState.value.uri == activePlayback.songUri) {
+            stopPlayback()
+        }
+
+        _selectedChorusIds.value = _selectedChorusIds.value - chorusId
+        refreshAssociatedChoruses()
     }
 
-    fun addMultipleChorusesToExercise(chorusIds: Set<Long>) = viewModelScope.launch {
-        val alreadyAdded = _selectedChorusIds.value
-        val newChorusIds = chorusIds - alreadyAdded
-
-        newChorusIds.forEach { chorusId ->
-            repository.addChorusToExercise(id, chorusId)
-        }
+    fun addMultipleChorusesToExercise(chorusIds: Set<Long>) {
+        _selectedChorusIds.value = _selectedChorusIds.value + chorusIds
+        refreshAssociatedChoruses()
     }
 
     fun discardChanges(goBack: () -> Unit = {}) = viewModelScope.launch {
         stopPlayback()
-
-        val currentChorusIds = _selectedChorusIds.value
-        val chorusIdsToRemove = currentChorusIds - originalChorusIds
-        val chorusIdsToRestore = originalChorusIds - currentChorusIds
-
-        chorusIdsToRemove.forEach { chorusId ->
-            repository.removeChorusFromExercise(id, chorusId)
-        }
-
-        chorusIdsToRestore.forEach { chorusId ->
-            repository.addChorusToExercise(id, chorusId)
-        }
+        _selectedChorusIds.value = originalChorusIds
+        refreshAssociatedChoruses()
 
         name = originalName
         weight = originalWeight
@@ -169,24 +169,25 @@ class EditExerciseViewModel(
     }
 
     fun playChorus(song: SongModel, chorus: ChorusModel) {
+        activeChorusPlayback = ActiveChorusPlayback(chorus.id, song.uriString)
         playerManager.play(song.uriString, chorus.startMs.toInt())
     }
 
     fun stopPlayback() {
+        activeChorusPlayback = null
         playerManager.stop()
     }
 
     private fun refreshAssociatedChoruses() {
         val songs = _allSongs.value
-        val choruses = _exerciseChoruses.value
+        val selectedChorusIds = _selectedChorusIds.value
 
-        _associatedChoruses.value = choruses.mapNotNull { chorus ->
-            songs.find { it.id == chorus.songId }?.let { song ->
-                song to chorus
+        _associatedChoruses.value = _allChoruses.value
+            .filter { chorus -> chorus.id in selectedChorusIds }
+            .mapNotNull { chorus ->
+                songs.find { it.id == chorus.songId }?.let { song -> song to chorus }
             }
-        }
-
-        _selectedChorusIds.value = choruses.map { it.id }.toSet()
+            .sortedBy { (_, chorus) -> chorus.startMs }
     }
 
     private fun refreshAllSongsWithChoruses() {
@@ -221,6 +222,8 @@ class EditExerciseViewModel(
     }
 
     fun updateExercise(goBack: () -> Unit = {}) = viewModelScope.launch {
+        if (!_chorusesLoaded.value) return@launch
+
         val trimmedName = name.trim()
         val trimmedWeight = weight.trim()
         val trimmedRest = restSeconds.trim()
@@ -246,6 +249,7 @@ class EditExerciseViewModel(
                 chorusDelay = chorusDelayMs
             )
         )
+        repository.replaceChorusesForExercise(id, _selectedChorusIds.value)
 
         selectedDayId?.let { repository.moveExercise(id, it) }
 
