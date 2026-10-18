@@ -1,17 +1,21 @@
 package com.example.gymtimer2.ui.screens.saved_songs
 
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,19 +30,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gymtimer2.GymApplication
+import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.SongModel
+import com.example.gymtimer2.ui.components.IconActionButton
+import com.example.gymtimer2.ui.components.PrimaryButton
+import com.example.gymtimer2.ui.components.ScreenTitle
 import com.example.gymtimer2.ui.components.music.MusicPermissionGate
 import com.example.gymtimer2.ui.components.music.deleteSongDialog
+import com.example.gymtimer2.ui.components.music.rememberAudioPermissionRequest
 import com.example.gymtimer2.util.hasAudioPermission
-import com.example.gymtimer2.util.requiredAudioPermission
 import com.example.gymtimer2.ui.screens.saved_songs.components.SongCard
-import com.example.gymtimer2.ui.components.PrimaryButton
 
 @Composable
 fun SavedSongsScreen(
@@ -51,9 +59,7 @@ fun SavedSongsScreen(
     val app = context.applicationContext as GymApplication
     var hasPermission by remember { mutableStateOf(hasAudioPermission(context)) }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) {
+    val requestAudioPermission = rememberAudioPermissionRequest {
         hasPermission = hasAudioPermission(context)
     }
 
@@ -71,13 +77,13 @@ fun SavedSongsScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(lifecycleOwner) {
-        onDispose {
-            viewModel.stopPlayer()
-        }
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_PAUSE -> {
                     viewModel.stopPlayer()
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    hasPermission = hasAudioPermission(context)
                 }
                 else -> Unit
             }
@@ -87,11 +93,11 @@ fun SavedSongsScreen(
 
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.stopPlayer()
         }
     }
 
     val songs by viewModel.savedSongs.collectAsState(initial = emptyList())
-    val playingSongId by viewModel.playingSongId.collectAsState()
     val playbackState by app.musicPlayerManager.playbackState.collectAsState()
 
     BackHandler { goBack() }
@@ -102,9 +108,27 @@ fun SavedSongsScreen(
     ) {
         MusicPermissionGate(
             hasPermission = hasPermission,
-            onRequestPermission = { permissionLauncher.launch(requiredAudioPermission()) }
+            onRequestPermission = { requestAudioPermission {} }
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconActionButton(onClick = goBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back_to_music_categories)
+                        )
+                    }
+                    ScreenTitle(
+                        text = stringResource(R.string.music_library_title),
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
                 PrimaryButton(onClick = onOpenSelection, modifier = Modifier.fillMaxWidth()) {
                     Text("Adicionar músicas")
                 }
@@ -112,7 +136,8 @@ fun SavedSongsScreen(
                 if (songs.isEmpty()) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .weight(1f)
+                            .fillMaxWidth()
                             .padding(top = 16.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -120,8 +145,10 @@ fun SavedSongsScreen(
                     }
                 } else {
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentPadding = PaddingValues(vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(
@@ -130,9 +157,11 @@ fun SavedSongsScreen(
                         ) { song ->
                             SongCard (
                                 song = song,
-                                isPlaying = playingSongId == song.id,
-                                playbackState = if (playingSongId == song.id) playbackState else null,
-                                onPlayClick = { viewModel.playSong(context, song) },
+                                isPlaying = playbackState.isPlaying && playbackState.uri == song.uriString,
+                                playbackState = playbackState.takeIf { it.uri == song.uriString },
+                                onPlayClick = {
+                                    requestAudioPermission { viewModel.playSong(context, song) }
+                                },
                                 onStopClick = viewModel::stopPlayer,
                                 onSeek = viewModel::seekTo,
                                 onEdit = { onEditSong(song) },

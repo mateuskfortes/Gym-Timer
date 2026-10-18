@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +38,7 @@ import com.example.gymtimer2.ui.components.LabeledOutlinedTextField
 import com.example.gymtimer2.ui.components.FormFieldLabel
 import com.example.gymtimer2.ui.components.chorus.ExerciseChorusSection
 import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
+import com.example.gymtimer2.ui.components.music.rememberAudioPermissionRequest
 
 @Composable
 fun AddExerciseScreen(
@@ -53,6 +55,11 @@ fun AddExerciseScreen(
             playerManager = app.musicPlayerManager
         )
     )
+    val runWithAudioPermission = rememberAudioPermissionRequest()
+
+    DisposableEffect(viewModel) {
+        onDispose { viewModel.stopPlayback() }
+    }
 
     val selectedChorusIds by viewModel.selectedChorusIds.collectAsState()
     val associatedChoruses by viewModel.associatedChoruses.collectAsState()
@@ -159,7 +166,9 @@ fun AddExerciseScreen(
                 choruses = associatedChoruses,
                 playbackState = playbackState,
                 onAddClick = { showChorusModal = true },
-                onPlay = viewModel::playChorus,
+                onPlay = { song, chorus ->
+                    runWithAudioPermission { viewModel.playChorus(song, chorus) }
+                },
                 onStop = viewModel::stopPlayback,
                 onRemove = viewModel::removeChorusFromExercise
             )

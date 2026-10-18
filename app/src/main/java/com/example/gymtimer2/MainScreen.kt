@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -33,6 +33,7 @@ import com.example.gymtimer2.ui.MainScreenDestination.EditExercise
 import com.example.gymtimer2.ui.MainScreenDestination.EditSongChorus
 import com.example.gymtimer2.ui.MainScreenDestination.Exercises
 import com.example.gymtimer2.ui.MainScreenDestination.LocalSongs
+import com.example.gymtimer2.ui.MainScreenDestination.MusicHome
 import com.example.gymtimer2.ui.MainScreenDestination.SavedSongs
 import com.example.gymtimer2.ui.MainScreenDestination.Settings
 import com.example.gymtimer2.ui.screens.add_exercise.AddExerciseScreen
@@ -42,6 +43,7 @@ import com.example.gymtimer2.ui.screens.edit_chorus.EditSongChorusScreen
 import com.example.gymtimer2.ui.screens.saved_songs.SavedSongsScreen
 import com.example.gymtimer2.ui.screens.local_songs.LocalSongsScreen
 import com.example.gymtimer2.ui.screens.settings.SettingsScreen
+import com.example.gymtimer2.ui.screens.music_home.MusicHomeScreen
 
 data class NavItem(
     val label: String,
@@ -63,7 +65,7 @@ fun MainScreen(
     val navItemList = listOf(
         NavItem(stringResource(R.string.nav_exercises), Icons.Default.Home, Exercises),
         NavItem(stringResource(R.string.nav_new), Icons.Default.Add, AddExercise),
-        NavItem(stringResource(R.string.nav_music), Icons.Default.PlayArrow, SavedSongs),
+        NavItem(stringResource(R.string.nav_music), Icons.Default.MusicNote, MusicHome),
         NavItem(stringResource(R.string.nav_settings), Icons.Default.Settings, Settings)
     )
 
@@ -79,7 +81,8 @@ fun MainScreen(
                 navItemList.forEach { navItem ->
                     NavigationBarItem(
                         label = { Text(navItem.label) },
-                        selected = navItem.destination == uiState.destination,
+                        selected = navItem.destination == uiState.destination ||
+                            (navItem.destination == MusicHome && uiState.destination.isMusicDestination()),
                         onClick = { mainScreenViewModel.navigateTo(navItem.destination) },
                         icon = {
                             Icon(
@@ -114,11 +117,15 @@ fun MainScreen(
                 initialDayId = uiState.selectedDayId,
                 goBack = { mainScreenViewModel.navigateTo(Exercises) }
             )
+            MusicHome -> MusicHomeScreen(
+                modifier = Modifier.padding(innerPadding),
+                onOpenLibrary = { mainScreenViewModel.navigateTo(SavedSongs) }
+            )
             SavedSongs -> SavedSongsScreen(
                 modifier = Modifier.padding(innerPadding),
                 onOpenSelection = { mainScreenViewModel.navigateTo(LocalSongs) },
                 onEditSong = { song -> mainScreenViewModel.navigateTo(EditSongChorus(song)) },
-                goBack = { mainScreenViewModel.navigateTo(Exercises) }
+                goBack = { mainScreenViewModel.navigateTo(MusicHome) }
             )
             Settings -> SettingsScreen(
                 settings = settings,
@@ -142,4 +149,10 @@ fun MainScreen(
             )
         }
     }
+}
+
+private fun MainScreenDestination.isMusicDestination(): Boolean = when (this) {
+    MusicHome, SavedSongs, LocalSongs -> true
+    is EditSongChorus -> true
+    else -> false
 }

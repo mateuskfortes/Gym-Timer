@@ -120,6 +120,10 @@ class EditSongChorusViewModel(
     fun playChorus(chorus: ChorusModel) {
         play(chorus.startMs.toInt(), volume = chorus.volume)
     }
+    fun playCurrentChorusPreview() {
+        val chorus = _chorusToEdit.value ?: return
+        playChorus(chorus)
+    }
     fun setChorusToEdit(chorus: ChorusModel?) {
         _chorusToEdit.value = chorus
     }

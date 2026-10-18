@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,6 +30,21 @@ class LocalSongsViewModel(
     val uiState: StateFlow<LocalSongsUiState> = _uiState.asStateFlow()
     private var savedSongsJob: Job? = null
 
+    init {
+        viewModelScope.launch {
+            playerManager.playbackState
+                .map { playback -> playback.uri.takeIf { playback.isPlaying } }
+                .distinctUntilChanged()
+                .collect { playingUri ->
+                    _uiState.update { state ->
+                        state.copy(
+                            playingSongId = state.songs.firstOrNull { it.uriString == playingUri }?.id
+                        )
+                    }
+                }
+        }
+    }
+
     private suspend fun loadSongs(savedSongsIds: List<Long>) {
         _uiState.update { it.copy(isLoading = true, error = null) }
         try {
@@ -35,7 +52,13 @@ class LocalSongsViewModel(
             val songs = withContext(Dispatchers.IO) {
                 repository.getSongs().filterNot { it.id in savedIds }
             }
-            _uiState.update { it.copy(isLoading = false, songs = songs) }
+            val playback = playerManager.playbackState.value
+            val playingSongId = songs.firstOrNull { song ->
+                playback.isPlaying && song.uriString == playback.uri
+            }?.id
+            _uiState.update {
+                it.copy(isLoading = false, songs = songs, playingSongId = playingSongId)
+            }
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -101,7 +124,7 @@ class LocalSongsViewModel(
         runCatching {
             playerManager.play(song.uriString)
         }.onSuccess {
-            _uiState.update { it.copy(playingSongId = song.id, error = null) }
+            _uiState.update { it.copy(error = null) }
         }.onFailure { throwable ->
             _uiState.update {
                 it.copy(error = throwable.message ?: "Não foi possível reproduzir a música")
@@ -128,6 +151,7 @@ class LocalSongsViewModel(
                 repository.getSavedSongsIds().collectLatest(::loadSongs)
             }
         } else if (!hasPermission) {
+            stopPlayer()
             stopObservingSongs()
         }
 

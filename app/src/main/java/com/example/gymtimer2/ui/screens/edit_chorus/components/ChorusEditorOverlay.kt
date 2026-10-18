@@ -68,6 +68,7 @@ fun ChorusEditorOverlay(
     playbackState: MusicPlaybackState,
     viewModel: EditSongChorusViewModel,
     artworkRepository: SongArtworkRepository,
+    onPlay: () -> Unit,
 ) {
     val maxDuration = song.durationMs?.takeIf { it > 0 } ?: maxOf(chorus.startMs + 1, 1L)
 
@@ -127,7 +128,7 @@ fun ChorusEditorOverlay(
                         if (isPreviewPlaying) {
                             viewModel.stopPlayback()
                         } else {
-                            viewModel.play(chorus.startMs.toInt(), chorus.volume)
+                            onPlay()
                         }
                     },
                     modifier = Modifier.fillMaxWidth()

@@ -1,8 +1,6 @@
 package com.example.gymtimer2.ui.screens.local_songs
 
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,8 +45,8 @@ import com.example.gymtimer2.ui.components.LoadingScreen
 import com.example.gymtimer2.ui.components.PrimaryButton
 import com.example.gymtimer2.ui.components.SecondaryButton
 import com.example.gymtimer2.ui.components.music.MusicPermissionGate
+import com.example.gymtimer2.ui.components.music.rememberAudioPermissionRequest
 import com.example.gymtimer2.ui.screens.local_songs.components.SongCard
-import com.example.gymtimer2.util.requiredAudioPermission
 
 @Composable
 fun LocalSongsScreen(
@@ -73,9 +71,7 @@ fun LocalSongsScreen(
         derivedStateOf { listState.isScrollInProgress }
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) {
+    val requestAudioPermission = rememberAudioPermissionRequest {
         viewModel.checkAudioPermission(context)
     }
 
@@ -87,6 +83,7 @@ fun LocalSongsScreen(
                 Lifecycle.Event.ON_PAUSE -> {
                     viewModel.stopPlayer()
                 }
+                Lifecycle.Event.ON_RESUME -> viewModel.checkAudioPermission(context)
                 else -> Unit
             }
         }
@@ -112,7 +109,7 @@ fun LocalSongsScreen(
     ) {
         MusicPermissionGate(
             hasPermission = uiState.hasPermission,
-            onRequestPermission = { permissionLauncher.launch(requiredAudioPermission()) }
+            onRequestPermission = { requestAudioPermission {} }
         ) {
             Scaffold(
                 bottomBar = {
@@ -191,7 +188,9 @@ fun LocalSongsScreen(
                                     isPlaying = uiState.playingSongId == song.id,
                                     selected = song.id in uiState.selectedSongIds,
                                     onSelectionChange = { viewModel.toggleSongSelection(song.id) },
-                                    onPlayClick = { viewModel.playSong(context, song) },
+                                    onPlayClick = {
+                                        requestAudioPermission { viewModel.playSong(context, song) }
+                                    },
                                     onStopClick = viewModel::stopPlayer,
                                     playbackStateFlow = if (uiState.playingSongId == song.id) {
                                         app.musicPlayerManager.playbackState

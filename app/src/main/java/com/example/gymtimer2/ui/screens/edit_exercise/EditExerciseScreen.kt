@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,6 +37,7 @@ import com.example.gymtimer2.ui.components.AppTextField
 import com.example.gymtimer2.ui.components.SecondaryButton
 import com.example.gymtimer2.ui.components.chorus.ExerciseChorusSection
 import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
+import com.example.gymtimer2.ui.components.music.rememberAudioPermissionRequest
 
 @Composable
 fun EditExerciseScreen(
@@ -54,6 +56,11 @@ fun EditExerciseScreen(
             playerManager = playerManager
         )
     )
+    val runWithAudioPermission = rememberAudioPermissionRequest()
+
+    DisposableEffect(viewModel) {
+        onDispose { viewModel.stopPlayback() }
+    }
 
     val playbackState by viewModel.playbackState.collectAsState()
     val associatedChoruses by viewModel.associatedChoruses.collectAsState()
@@ -144,7 +151,9 @@ fun EditExerciseScreen(
             choruses = associatedChoruses,
             playbackState = playbackState,
             onAddClick = { showSelectModal = true },
-            onPlay = viewModel::playChorus,
+            onPlay = { song, chorus ->
+                runWithAudioPermission { viewModel.playChorus(song, chorus) }
+            },
             onStop = viewModel::stopPlayback,
             onRemove = viewModel::removeChorusFromExercise,
             addEnabled = chorusesLoaded

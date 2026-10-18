@@ -89,7 +89,7 @@ Se o dispositivo não aparecer, teste outro cabo ou porta USB e use **Tools > Tr
 
 ## Permissões
 
-- **Áudio local:** `READ_MEDIA_AUDIO` no Android 13+ ou `READ_EXTERNAL_STORAGE` até Android 12L. Necessária para listar e reproduzir músicas do dispositivo.
+- **Áudio local:** `READ_MEDIA_AUDIO` no Android 13+ ou `READ_EXTERNAL_STORAGE` até Android 12L. Necessária para listar e reproduzir músicas do dispositivo. A biblioteca e a seleção mostram **Permitir** quando falta acesso; tocar em uma música ou refrão abre o pedido de permissão do Android. Se o acesso for negado, a reprodução não começa.
 - **Sobreposição:** `SYSTEM_ALERT_WINDOW`. O app encaminha às configurações ao abrir o timer sem essa permissão.
 - **Serviço em primeiro plano:** o timer flutuante é executado por `OverlayService` com uma notificação persistente.
 

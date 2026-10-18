@@ -37,6 +37,7 @@ import com.example.gymtimer2.ui.components.IconActionButton
 import com.example.gymtimer2.ui.components.ScreenTitle
 import com.example.gymtimer2.ui.components.music.SongCover
 import com.example.gymtimer2.ui.components.music.SongPlaybackControls
+import com.example.gymtimer2.ui.components.music.rememberAudioPermissionRequest
 import com.example.gymtimer2.util.formatMillisToMinSec
 import com.example.gymtimer2.ui.components.PrimaryButton
 import com.example.gymtimer2.ui.components.SecondaryButton
@@ -61,6 +62,7 @@ fun EditSongChorusScreen(
             songToEdit = songToEdit
         )
     )
+    val runWithAudioPermission = rememberAudioPermissionRequest()
 
     val playbackState by app.musicPlayerManager.playbackState.collectAsStateWithLifecycle()
     val choruses by viewModel.choruses.collectAsStateWithLifecycle()
@@ -227,7 +229,7 @@ fun EditSongChorusScreen(
             SongPlaybackControls(
                 playbackState = playbackState,
                 songUri = song.uriString,
-                onPlay = { viewModel.play() },
+                onPlay = { runWithAudioPermission { viewModel.play() } },
                 onStop = viewModel::stopPlayback,
                 onSeek = viewModel::seekTo,
             )
@@ -261,6 +263,9 @@ fun EditSongChorusScreen(
                             song = song,
                             playbackState = playbackState,
                             viewModel = viewModel,
+                            onPlay = {
+                                runWithAudioPermission { viewModel.playChorus(chorus) }
+                            },
                         )
                     }
                 }
@@ -274,6 +279,9 @@ fun EditSongChorusScreen(
                 playbackState = playbackState,
                 viewModel = viewModel,
                 artworkRepository = app.container.songArtworkRepository,
+                onPlay = {
+                    runWithAudioPermission(viewModel::playCurrentChorusPreview)
+                },
             )
         }
     }

@@ -3,6 +3,9 @@
     <string name="nav_exercises">Exercícios</string>
     <string name="nav_new">Novo</string>
     <string name="nav_music">Músicas</string>
+    <string name="music_library_title">Biblioteca de músicas</string>
+    <string name="music_library_description">Gerencie as músicas do seu dispositivo usadas nos treinos.</string>
+    <string name="back_to_music_categories">Voltar para categorias de músicas</string>
     <string name="nav_settings">Ajustes</string>
     <string name="settings_title">Configurações</string>
     <string name="settings_appearance">Aparência</string>

@@ -1,7 +1,6 @@
 package com.example.gymtimer2.player
 
 import android.content.Context
-import android.health.connect.datatypes.units.Volume
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.AudioFocusRequest
@@ -12,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.core.net.toUri
 import com.example.gymtimer2.domain.model.MusicPlaybackState
+import com.example.gymtimer2.util.hasAudioPermission
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,21 +28,30 @@ class MusicPlayerManager(
     private val context: Context
 ) {
     private var mediaPlayer: MediaPlayer? = null
+    private var isPrepared = false
     val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private var audioFocusRequest: AudioFocusRequest? = null
     private val audioFocusListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {
-                // regained focus — resume if paused
-                try { mediaPlayer?.start() } catch (_: Exception) {}
-                updatePlaybackState(uri = _playbackState.value.uri, currentPositionMs = mediaPlayer?.currentPosition ?: 0, durationMs = mediaPlayer?.duration ?: 0, isPlaying = mediaPlayer?.isPlaying == true)
+                if (isPrepared) {
+                    mediaPlayer?.let { player ->
+                        runCatching { player.start() }
+                            .onSuccess { updatePlaybackFrom(player) }
+                            .onFailure { stopInternal() }
+                    }
+                }
             }
             AudioManager.AUDIOFOCUS_LOSS,
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT,
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                // lost focus — pause playback to give priority to others
-                try { mediaPlayer?.pause() } catch (_: Exception) {}
-                updatePlaybackState(uri = _playbackState.value.uri, currentPositionMs = mediaPlayer?.currentPosition ?: 0, durationMs = mediaPlayer?.duration ?: 0, isPlaying = false)
+                if (isPrepared) {
+                    mediaPlayer?.let { player ->
+                        runCatching { player.pause() }
+                            .onSuccess { updatePlaybackFrom(player) }
+                            .onFailure { stopInternal() }
+                    }
+                }
             }
         }
     }
@@ -63,62 +72,95 @@ class MusicPlayerManager(
         volume: Float? = null,
         playForMs: Int? = null
     ) {
-        // stop any existing playback and request audio focus
         stopInternal()
-        fadeInJob?.cancel()
+        if (!hasAudioPermission(context)) return
 
-        val focusGranted = requestAudioFocus()
-        if (!focusGranted) {
-            // failed to get audio focus; don't start playback
-            _playbackState.value = MusicPlaybackState()
+        val player = runCatching { MediaPlayer() }.getOrNull() ?: run {
+            stopInternal()
+            return
+        }
+        mediaPlayer = player
+
+        runCatching {
+            player.setOnPreparedListener { preparedPlayer ->
+                startPreparedPlayback(
+                    preparedPlayer,
+                    uri,
+                    startAtMs,
+                    fadeInDurationMs,
+                    volume,
+                    playForMs
+                )
+            }
+            player.setOnCompletionListener { completedPlayer ->
+                if (mediaPlayer === completedPlayer) stopInternal()
+            }
+            player.setOnErrorListener { failedPlayer, _, _ ->
+                if (mediaPlayer === failedPlayer) stopInternal()
+                true
+            }
+            player.setDataSource(context, uri.toUri())
+            player.prepareAsync()
+        }.onFailure { stopInternal() }
+    }
+
+    private fun startPreparedPlayback(
+        player: MediaPlayer,
+        uri: String,
+        startAtMs: Int,
+        fadeInDurationMs: Int,
+        volume: Float?,
+        playForMs: Int?
+    ) {
+        if (mediaPlayer !== player) return
+        if (!hasAudioPermission(context)) {
+            stopInternal()
+            return
+        }
+        if (!runCatching { requestAudioFocus() }.getOrDefault(false)) {
+            stopInternal()
             return
         }
 
-        previousVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
-
-        mediaPlayer = MediaPlayer().apply {
-            setDataSource(context, uri.toUri())
-            prepare()
-
-            val safeStartAt = minOf(startAtMs, duration)
+        runCatching {
+            isPrepared = true
+            previousVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
+            val durationMs = player.duration
+            val safeStartAtMs = startAtMs.coerceIn(0, durationMs)
             previewEndAtMs = playForMs?.takeIf { it > 0 }?.let { limitMs ->
-                (safeStartAt + limitMs).coerceAtMost(duration)
+                (safeStartAtMs + limitMs).coerceAtMost(durationMs)
             }
-            seekTo(safeStartAt)
-            setOnCompletionListener {
-                stopInternal()
-            }
-            // start with volume at 0 for fade-in
-            setVolume(0f, 0f)
+            player.seekTo(safeStartAtMs)
+            player.setVolume(0f, 0f)
             audioManager.setStreamVolume(
                 AudioManager.STREAM_MUSIC,
-                volume?.toInt() ?: (previousVolume ?: 0).toInt(),
+                volume?.toInt() ?: (previousVolume ?: 0f).toInt(),
                 0
             )
-            start()
+            player.start()
+            updatePlaybackFrom(player, uri)
+            startProgressUpdates(uri.toUri())
+            startFadeIn(player, fadeInDurationMs)
+        }.onFailure { stopInternal() }
+    }
+
+    private fun startFadeIn(player: MediaPlayer, durationMs: Int) {
+        if (durationMs <= 0) {
+            player.setVolume(1f, 1f)
+            return
         }
 
-        updatePlaybackState(uri, mediaPlayer?.currentPosition ?: 0, mediaPlayer?.duration ?: 0, true)
-        startProgressUpdates(uri.toUri())
-
-        // perform fade-in if requested
-        if (fadeInDurationMs > 0) {
-            fadeInJob = scope.launch {
-                val totalMs = fadeInDurationMs.coerceAtLeast(1)
-                val stepMs = 50L
-                val steps = ((totalMs + stepMs - 1) / stepMs).toInt().coerceAtLeast(1)
-                for (i in 0 until steps) {
-                    if (!isActive) break
-                    val fraction = ((i + 1) * stepMs).toFloat() / totalMs
-                    val vol = fraction.coerceIn(0f, 1f)
-                    mediaPlayer?.setVolume(vol, vol)
-                    delay(stepMs)
-                }
-                mediaPlayer?.setVolume(1f, 1f)
-                fadeInJob = null
+        fadeInJob = scope.launch {
+            val stepMs = 50L
+            val steps = ((durationMs + stepMs - 1) / stepMs).toInt().coerceAtLeast(1)
+            for (step in 1..steps) {
+                if (!isActive || mediaPlayer !== player) break
+                val volume = (step * stepMs).toFloat() / durationMs
+                player.setVolume(volume.coerceIn(0f, 1f), volume.coerceIn(0f, 1f))
+                delay(stepMs)
             }
-        } else {
-            mediaPlayer?.setVolume(1f, 1f)
+            if (mediaPlayer === player) player.setVolume(1f, 1f)
+            fadeInJob = null
         }
     }
 
@@ -155,6 +197,7 @@ class MusicPlayerManager(
     }
 
     fun seekTo(positionMs: Int) {
+        if (!isPrepared) return
         val player = mediaPlayer ?: return
         val duration = runCatching { player.duration }.getOrDefault(0)
         val safePosition = if (duration > 0) {
@@ -176,7 +219,7 @@ class MusicPlayerManager(
     }
 
     fun setPlaybackVolume(volume: Float) {
-        if (mediaPlayer == null) return
+        if (!isPrepared || mediaPlayer == null) return
 
         val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         audioManager.setStreamVolume(
@@ -219,16 +262,23 @@ class MusicPlayerManager(
         progressJob = scope.launch {
             while (isActive) {
                 val player = mediaPlayer ?: break
+                val progress = runCatching {
+                    Triple(player.currentPosition, player.duration, player.isPlaying)
+                }.getOrNull()
+                if (progress == null) {
+                    stopInternal()
+                    break
+                }
                 val endAtMs = previewEndAtMs
-                if (endAtMs != null && player.currentPosition >= endAtMs) {
+                if (endAtMs != null && progress.first >= endAtMs) {
                     stopInternal()
                     break
                 }
                 updatePlaybackState(
                     uri = uri.toString(),
-                    currentPositionMs = player.currentPosition,
-                    durationMs = runCatching { player.duration }.getOrDefault(0),
-                    isPlaying = player.isPlaying
+                    currentPositionMs = progress.first,
+                    durationMs = progress.second,
+                    isPlaying = progress.third
                 )
                 delay(250)
             }
@@ -243,19 +293,33 @@ class MusicPlayerManager(
         fadeInJob?.cancel()
         fadeInJob = null
 
-        mediaPlayer?.release()
+        val player = mediaPlayer
         mediaPlayer = null
+        isPrepared = false
+        runCatching { player?.release() }
 
         delayedPlayerJob?.cancel()
+        delayedPlayerJob = null
 
         abandonAudioFocus()
 
         _playbackState.value = MusicPlaybackState()
 
-        audioManager.setStreamVolume(
-            AudioManager.STREAM_MUSIC,
-            previousVolume?.toInt() ?: audioManager.getStreamVolume(AudioManager.STREAM_MUSIC),
-            0
+        val volumeToRestore = previousVolume
+        previousVolume = null
+        volumeToRestore?.let { volume ->
+            runCatching {
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume.toInt(), 0)
+            }
+        }
+    }
+
+    private fun updatePlaybackFrom(player: MediaPlayer, uri: String? = _playbackState.value.uri) {
+        updatePlaybackState(
+            uri = uri,
+            currentPositionMs = runCatching { player.currentPosition }.getOrDefault(0),
+            durationMs = runCatching { player.duration }.getOrDefault(0),
+            isPlaying = runCatching { player.isPlaying }.getOrDefault(false)
         )
     }
 

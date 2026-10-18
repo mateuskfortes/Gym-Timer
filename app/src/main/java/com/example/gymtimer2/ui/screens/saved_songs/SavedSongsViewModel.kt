@@ -11,9 +11,6 @@ import com.example.gymtimer2.player.MusicPlayerManager
 import com.example.gymtimer2.util.hasAudioPermission
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 class SavedSongsViewModel(
     private val repository: WorkoutRepository,
@@ -22,27 +19,26 @@ class SavedSongsViewModel(
 
     val savedSongs = repository.savedSongs
 
-    private val _playingSongId = MutableStateFlow<Long?>(null)
-    val playingSongId: StateFlow<Long?> = _playingSongId.asStateFlow()
+    private var requestedSongId: Long? = null
 
     fun playSong(context: Context, song: SongModel) {
         if (!hasAudioPermission(context)) {
-            _playingSongId.value = null
+            requestedSongId = null
             return
         }
 
         runCatching {
             playerManager.play(song.uriString)
         }.onSuccess {
-            _playingSongId.value = song.id
+            requestedSongId = song.id
         }.onFailure {
-            _playingSongId.value = null
+            requestedSongId = null
         }
     }
 
     fun stopPlayer() {
         playerManager.stop()
-        _playingSongId.value = null
+        requestedSongId = null
     }
 
     fun seekTo(positionMs: Int) {
@@ -50,7 +46,7 @@ class SavedSongsViewModel(
     }
 
     fun deleteSong(song: SongModel) {
-        if (_playingSongId.value == song.id) {
+        if (requestedSongId == song.id) {
             stopPlayer()
         }
         viewModelScope.launch {

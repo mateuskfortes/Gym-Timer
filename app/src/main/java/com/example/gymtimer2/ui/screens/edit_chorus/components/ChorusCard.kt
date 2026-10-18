@@ -37,6 +37,7 @@ fun ChorusCard(
     song: SongModel,
     playbackState: MusicPlaybackState,
     viewModel: EditSongChorusViewModel,
+    onPlay: () -> Unit,
 ) {
     val durationMs = song.durationMs?.takeIf { it > 0 }
         ?: maxOf(chorus.startMs + 1, 1L)
@@ -76,7 +77,7 @@ fun ChorusCard(
                         if (isChorusPlaying) {
                             viewModel.stopPlayback()
                         } else {
-                            viewModel.playChorus(chorus)
+                            onPlay()
                         }
                     }
                 ) {

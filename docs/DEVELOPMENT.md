@@ -28,7 +28,7 @@ Para compilar, instalar e abrir o aplicativo, rode `./run-app.sh`. O script usa 
 | Mudança | Verificação mínima |
 | --- | --- |
 | Exercícios ou Room | Criar e renomear dias; criar, editar, mover, ordenar e excluir exercícios; adicionar/remover refrões e conferir que **Salvar** persiste e **Cancelar** descarta; reabrir o app e conferir ordem e associações. Tentar excluir um dia com exercícios deve ser impedido. |
-| Músicas ou player | Conceder/recusar permissão de áudio; listar, salvar, reproduzir, pausar e excluir música/trecho; conferir volume ao terminar. |
+| Músicas ou player | Negar e depois conceder a permissão ao tocar música inteira, refrão e prévias nos exercícios; revogar o acesso com a tela aberta e tentar reproduzir novamente; listar, salvar e excluir música/trecho; conferir que o player para e restaura o volume ao terminar. |
 | Overlay | Abrir após permissão já concedida e após concedê-la nas configurações; tocar para iniciar/encerrar série; editar carga no painel sobre outro app; testar **Manter**, **Próximo** e **Concluir treino**; conferir descanso do exercício escolhido, transparência, arrastar/fechar e notificação. |
 | Aparência | Alternar claro/escuro e as 12 cores; abrir outras abas e reabrir o app para conferir persistência; com overlay aberto, alterar aparência e conferir timer e painel de carga. |
 | Migração Room | Atualizar instalação com dados da versão anterior; conferir que os registros sobrevivem. |
