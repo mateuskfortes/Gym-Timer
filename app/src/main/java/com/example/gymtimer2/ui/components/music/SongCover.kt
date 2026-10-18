@@ -1,67 +1,65 @@
 package com.example.gymtimer2.ui.components.music
 
-import android.graphics.BitmapFactory
-import android.media.MediaMetadataRetriever
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
+import com.example.gymtimer2.data.repository.SongArtworkRepository
+import com.example.gymtimer2.domain.model.SongModel
+import com.example.gymtimer2.ui.components.AppSurface
 
 @Composable
-fun SongCover(uri: String?) {
-    val context = LocalContext.current
-
-    val coverBytes = remember(uri) {
-        if (uri == null) return@remember null
-
-        val retriever = MediaMetadataRetriever()
-        try {
-            retriever.setDataSource(context, uri.toUri())
-            retriever.embeddedPicture
-        } catch (_: Exception) {
-            null
-        } finally {
-            try {
-                retriever.release()
-            } catch (_: Exception) {
-            }
+fun SongCover(
+    song: SongModel,
+    artworkRepository: SongArtworkRepository,
+    shouldLoadArtwork: Boolean = true
+) {
+    val bitmap by produceState(
+        initialValue = artworkRepository.getBestCachedArtwork(song),
+        key1 = song.uriString,
+        key2 = artworkRepository,
+        key3 = shouldLoadArtwork
+    ) {
+        if (shouldLoadArtwork && !artworkRepository.hasFullArtwork(song)) {
+            artworkRepository.loadFullArtwork(song)?.let { value = it }
+        } else if (!shouldLoadArtwork && value == null) {
+            value = artworkRepository.loadPreviewArtwork(song)
         }
     }
+    val shape = RoundedCornerShape(14.dp)
+    val displayedBitmap = bitmap
 
-    if (coverBytes != null) {
-        val bitmap = remember(coverBytes) {
-            BitmapFactory.decodeByteArray(coverBytes, 0, coverBytes.size)
-        }
-
-        if (bitmap != null) {
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Capa da música",
-                modifier = Modifier.size(64.dp),
-                contentScale = ContentScale.Crop
-            )
-            return
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .size(64.dp)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+    AppSurface(
+        modifier = Modifier.size(64.dp),
+        shape = shape,
+        elevation = 4.dp,
         contentAlignment = Alignment.Center
     ) {
-        Text("♪", fontSize = 48.sp)
+        if (displayedBitmap != null) {
+            Image(
+                bitmap = displayedBitmap.asImageBitmap(),
+                contentDescription = "Capa da música",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(3.dp)
+                    .clip(shape),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Text("♪", fontSize = 48.sp, color = MaterialTheme.colorScheme.primary)
+        }
     }
 }

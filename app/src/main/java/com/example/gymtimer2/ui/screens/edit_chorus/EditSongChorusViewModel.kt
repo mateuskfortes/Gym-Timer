@@ -1,6 +1,5 @@
 package com.example.gymtimer2.ui.screens.edit_chorus
 
-import android.health.connect.datatypes.units.Volume
 import android.media.AudioManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -18,8 +17,12 @@ import kotlinx.coroutines.withContext
 class EditSongChorusViewModel(
     private val repository: WorkoutRepository,
     val playerManager: MusicPlayerManager,
-    val songToEdit: SongModel
+    songToEdit: SongModel
 ) : ViewModel() {
+
+    private val _songToEdit = MutableStateFlow(songToEdit)
+    val songToEditState = _songToEdit.asStateFlow()
+    val songToEdit: SongModel get() = _songToEdit.value
 
     private val _choruses = MutableStateFlow<List<ChorusModel>>(emptyList())
     val choruses = _choruses.asStateFlow()
@@ -42,6 +45,27 @@ class EditSongChorusViewModel(
     fun stopPlayback() {
         playerManager.stop()
     }
+
+    fun renameSong(title: String, onDone: (Boolean) -> Unit) {
+        val normalizedTitle = title.trim()
+        if (normalizedTitle.isEmpty()) {
+            onDone(false)
+            return
+        }
+
+        viewModelScope.launch {
+            val renamed = withContext(Dispatchers.IO) {
+                runCatching {
+                    repository.renameSong(songToEdit.id, normalizedTitle)
+                }.getOrDefault(false)
+            }
+            if (renamed) {
+                _songToEdit.value = songToEdit.copy(title = normalizedTitle)
+            }
+            onDone(renamed)
+        }
+    }
+
     fun seekTo(positionMs: Int) {
         playerManager.seekTo(positionMs)
     }
@@ -95,7 +119,27 @@ class EditSongChorusViewModel(
     fun setChorusToEdit(chorus: ChorusModel?) {
         _chorusToEdit.value = chorus
     }
-    fun saveUpdatedChorus(chorus: ChorusModel) {
+
+    fun updateChorusVolume(volume: Float) {
+        val chorus = _chorusToEdit.value ?: return
+        _chorusToEdit.value = chorus.copy(volume = volume)
+
+        val playbackState = playerManager.playbackState.value
+        if (playbackState.isPlaying && playbackState.uri == songToEdit.uriString) {
+            playerManager.setPlaybackVolume(volume)
+        }
+    }
+
+    fun updateChorusName(name: String) {
+        _chorusToEdit.value = _chorusToEdit.value?.copy(name = name)
+    }
+
+    fun updateChorusStart(startMs: Long) {
+        _chorusToEdit.value = _chorusToEdit.value?.copy(startMs = startMs.coerceAtLeast(0))
+    }
+
+    fun saveUpdatedChorus() {
+        val chorus = _chorusToEdit.value ?: return
         saveChorus(
             chorus = chorus,
             songToEdit.durationMs

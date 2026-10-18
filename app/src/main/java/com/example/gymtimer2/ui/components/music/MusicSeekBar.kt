@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,7 +55,12 @@ fun MusicSeekBar(
                 isDragging = false
             },
             valueRange = 0f..playbackState.durationMs.toFloat(),
-            modifier = Modifier.fillMaxWidth()
+            colors = SliderDefaults.colors(
+                inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.24f)
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 2.dp)
         )
 
         Row(

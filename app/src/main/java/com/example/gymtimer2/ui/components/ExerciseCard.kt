@@ -11,7 +11,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -37,13 +36,12 @@ fun ExerciseCard(
 
     Card(
         modifier = modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .softCardShadow(MaterialTheme.shapes.medium, 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        )
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row (
             Modifier.fillMaxSize(),
@@ -65,19 +63,19 @@ fun ExerciseCard(
                 Text(
                     text = "Peso: ${exercise.weight.plainText}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
                     text = "Descanso: ${formatMillisToMinSec(exercise.restPeriod)}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
                     text = "Delay do refrão: ${formatMillisToMinSec(exercise.chorusDelay)}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Column(
@@ -85,21 +83,21 @@ fun ExerciseCard(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 dragHandle()
-                IconButton(onClick = { onDelete(exercise) }) {
+                IconActionButton(onClick = { onDelete(exercise) }) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
                         contentDescription = stringResource(R.string.cd_delete_exercise)
                     )
                 }
 
-                IconButton(onClick = { onEdit(exercise) }) {
+                IconActionButton(onClick = { onEdit(exercise) }) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
                         contentDescription = stringResource(R.string.cd_edit_exercise)
                     )
                 }
 
-                IconButton(onClick = onStart) {
+                IconActionButton(onClick = onStart) {
                     Icon(
                         imageVector = Icons.Filled.PlayArrow,
                         contentDescription = stringResource(R.string.cd_start_exercise)

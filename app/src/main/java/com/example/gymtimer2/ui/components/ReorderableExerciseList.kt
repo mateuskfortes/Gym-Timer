@@ -1,5 +1,8 @@
 package com.example.gymtimer2.ui.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +39,7 @@ import com.example.gymtimer2.domain.model.ScheduledExerciseModel
 import kotlinx.coroutines.launch
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 fun ReorderableExerciseList(
     exercises: List<ScheduledExerciseModel>,
     onReorder: (List<Int>) -> Unit,
@@ -68,67 +72,93 @@ fun ReorderableExerciseList(
     ) {
         items(displayed, key = { it.exercise.id }) { scheduled ->
             val id = scheduled.exercise.id
+            val placementAnimation = if (draggedId == id) {
+                Modifier
+            } else {
+                Modifier.animateItem(
+                    fadeInSpec = null,
+                    fadeOutSpec = null,
+                    placementSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                )
+            }
+
             ExerciseCard(
                 exercise = scheduled.exercise,
-                modifier = Modifier.zIndex(if (draggedId == id) 1f else 0f).graphicsLayer {
-                    translationY = if (draggedId == id) dragOffset else 0f
-                },
+                modifier = placementAnimation
+                    .zIndex(if (draggedId == id) 1f else 0f)
+                    .graphicsLayer {
+                        translationY = if (draggedId == id) dragOffset else 0f
+                    },
                 onEdit = { onEdit(scheduled) },
                 onDelete = { onDelete(scheduled) },
                 onStart = { onStart(scheduled) },
                 dragHandle = {
                     Box(
-                        modifier = Modifier.size(48.dp).pointerInput(id) {
-                            detectDragGestures(
-                                onDragStart = {
-                                    draggedId = id
-                                    dragOffset = 0f
-                                },
-                                onDragEnd = {
-                                    val orderedIds = displayed.map { it.exercise.id }
-                                    if (draggedId != null && orderedIds != exercises.map { it.exercise.id }) {
-                                        onReorder(orderedIds)
-                                    }
-                                    draggedId = null
-                                    dragOffset = 0f
-                                },
-                                onDragCancel = {
-                                    draggedId = null
-                                    dragOffset = 0f
-                                    displayed = exercises
-                                },
-                                onDrag = { change, amount ->
-                                    change.consume()
-                                    dragOffset += amount.y
-                                    val layout = listState.layoutInfo
-                                    val source = layout.visibleItemsInfo.firstOrNull { it.key == id }
-                                        ?: return@detectDragGestures
-                                    val center = source.offset + source.size / 2 + dragOffset
-                                    val target = layout.visibleItemsInfo.firstOrNull { item ->
-                                        item.key != id && center.toInt() in item.offset..(item.offset + item.size)
-                                    }
-                                    if (target != null) {
-                                        val from = displayed.indexOfFirst { it.exercise.id == id }
-                                        val to = displayed.indexOfFirst { it.exercise.id == target.key }
-                                        if (from >= 0 && to >= 0) {
-                                            displayed = displayed.toMutableList().apply { add(to, removeAt(from)) }
-                                            dragOffset += source.offset - target.offset
+                        modifier = Modifier
+                            .size(48.dp)
+                            .pointerInput(id) {
+                                detectDragGestures(
+                                    onDragStart = {
+                                        draggedId = id
+                                        dragOffset = 0f
+                                    },
+                                    onDragEnd = {
+                                        val orderedIds = displayed.map { it.exercise.id }
+                                        if (draggedId != null && orderedIds != exercises.map { it.exercise.id }) {
+                                            onReorder(orderedIds)
+                                        }
+                                        draggedId = null
+                                        dragOffset = 0f
+                                    },
+                                    onDragCancel = {
+                                        draggedId = null
+                                        dragOffset = 0f
+                                        displayed = exercises
+                                    },
+                                    onDrag = { change, amount ->
+                                        change.consume()
+                                        dragOffset += amount.y
+
+                                        val layout = listState.layoutInfo
+                                        val source = layout.visibleItemsInfo.firstOrNull { it.key == id }
+                                            ?: return@detectDragGestures
+                                        val center = source.offset + source.size / 2 + dragOffset
+                                        val target = layout.visibleItemsInfo.firstOrNull { item ->
+                                            item.key != id && center.toInt() in item.offset..(item.offset + item.size)
+                                        }
+
+                                        if (target != null) {
+                                            val from = displayed.indexOfFirst { it.exercise.id == id }
+                                            val to = displayed.indexOfFirst { it.exercise.id == target.key }
+                                            if (from >= 0 && to >= 0) {
+                                                displayed = displayed.toMutableList().apply {
+                                                    add(to, removeAt(from))
+                                                }
+                                                dragOffset += source.offset - target.offset
+                                            }
+                                        }
+
+                                        when {
+                                            center > layout.viewportEndOffset - source.size -> {
+                                                scope.launch { listState.scrollBy(24f) }
+                                            }
+                                            center < layout.viewportStartOffset + source.size -> {
+                                                scope.launch { listState.scrollBy(-24f) }
+                                            }
                                         }
                                     }
-                                    when {
-                                        center > layout.viewportEndOffset - source.size -> scope.launch { listState.scrollBy(24f) }
-                                        center < layout.viewportStartOffset + source.size -> scope.launch { listState.scrollBy(-24f) }
-                                    }
-                                }
-                            )
-                        },
+                                )
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.DragIndicator,
                             contentDescription = stringResource(R.string.reorder_exercise),
                             modifier = Modifier.size(32.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

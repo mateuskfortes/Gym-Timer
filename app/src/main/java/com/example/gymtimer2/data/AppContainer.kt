@@ -2,9 +2,14 @@ package com.example.gymtimer2.data
 
 import android.content.Context
 import com.example.gymtimer2.data.database.WorkoutDatabase
+import com.example.gymtimer2.data.preferences.AppSettingsRepository
+import com.example.gymtimer2.data.repository.SongArtworkRepository
 import com.example.gymtimer2.data.repository.WorkoutRepository
 
 class AppContainer(context: Context) {
+
+    val appSettingsRepository = AppSettingsRepository(context)
+    val songArtworkRepository = SongArtworkRepository(context.applicationContext)
 
     private val database = WorkoutDatabase.getDatabase(context)
 

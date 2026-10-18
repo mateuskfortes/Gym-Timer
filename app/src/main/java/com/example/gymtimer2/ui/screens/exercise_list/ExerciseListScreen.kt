@@ -13,13 +13,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,6 +36,11 @@ import com.example.gymtimer2.domain.model.ScheduledExerciseModel
 import com.example.gymtimer2.domain.model.WorkoutScheduleError
 import com.example.gymtimer2.ui.components.ExerciseCard
 import com.example.gymtimer2.ui.components.LoadingScreen
+import com.example.gymtimer2.ui.components.PrimaryButton
+import com.example.gymtimer2.ui.components.IconActionButton
+import com.example.gymtimer2.ui.components.AppTextField
+import com.example.gymtimer2.ui.components.SecondaryButton
+import com.example.gymtimer2.ui.components.softCardShadow
 import com.example.gymtimer2.ui.components.ReorderableExerciseList
 import com.example.gymtimer2.ui.components.WorkoutDaySelector
 import com.example.gymtimer2.ui.components.deleteExerciseDialog
@@ -97,16 +98,19 @@ fun ExerciseListScreen(
     if (showDeleteDialog && selectedDay != null) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
+            modifier = Modifier.softCardShadow(MaterialTheme.shapes.extraLarge, 12.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            tonalElevation = 0.dp,
             title = { Text(stringResource(R.string.delete_day)) },
             text = { Text(stringResource(R.string.delete_day_confirmation, selectedDay.name)) },
             confirmButton = {
-                TextButton(onClick = {
+                SecondaryButton(onClick = {
                     viewModel.deleteDay(selectedDay.id)
                     showDeleteDialog = false
                 }) { Text(stringResource(R.string.delete_day)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
+                SecondaryButton(onClick = { showDeleteDialog = false }) {
                     Text(stringResource(R.string.cancel_button))
                 }
             }
@@ -114,19 +118,17 @@ fun ExerciseListScreen(
     }
 
     Column(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                stringResource(R.string.workout_days_title),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.headlineSmall
-            )
-            IconButton(onClick = { viewModel.clearError(); showCreateDialog = true }) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconActionButton(onClick = { viewModel.clearError(); showCreateDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_day))
             }
-            IconButton(onClick = { viewModel.clearError(); showRenameDialog = true }, enabled = selectedDay != null) {
+            IconActionButton(onClick = { viewModel.clearError(); showRenameDialog = true }, enabled = selectedDay != null) {
                 Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.rename_day))
             }
-            IconButton(
+            IconActionButton(
                 onClick = { viewModel.clearError(); showDeleteDialog = true },
                 enabled = selectedDay != null && days.size > 1 &&
                     (dayExercises as? DayExercisesUiState.Loaded)?.let {
@@ -200,9 +202,12 @@ private fun DayNameDialog(
     var name by remember(initialName) { mutableStateOf(initialName) }
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.softCardShadow(MaterialTheme.shapes.extraLarge, 12.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp,
         title = { Text(title) },
         text = {
-            OutlinedTextField(
+            AppTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text(stringResource(R.string.day_name)) },
@@ -211,12 +216,12 @@ private fun DayNameDialog(
             )
         },
         confirmButton = {
-            Button(onClick = { onConfirm(name.trim()) }, enabled = name.isNotBlank()) {
+            PrimaryButton(onClick = { onConfirm(name.trim()) }, enabled = name.isNotBlank()) {
                 Text(stringResource(R.string.save_button))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel_button)) }
+            SecondaryButton(onClick = onDismiss) { Text(stringResource(R.string.cancel_button)) }
         }
     )
 }

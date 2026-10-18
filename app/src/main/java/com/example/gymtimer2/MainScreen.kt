@@ -1,130 +1,144 @@
 package com.example.gymtimer2
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.gymtimer2.domain.model.ExerciseModel
-import com.example.gymtimer2.domain.model.ScheduledExerciseModel
-import com.example.gymtimer2.domain.model.SongModel
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.gymtimer2.domain.model.AccentColor
+import com.example.gymtimer2.domain.model.AppSettings
+import com.example.gymtimer2.domain.model.ThemeMode
+import com.example.gymtimer2.ui.MainScreenDestination
+import com.example.gymtimer2.ui.MainScreenViewModel
+import com.example.gymtimer2.ui.MainScreenDestination.AddExercise
+import com.example.gymtimer2.ui.MainScreenDestination.EditExercise
+import com.example.gymtimer2.ui.MainScreenDestination.EditSongChorus
+import com.example.gymtimer2.ui.MainScreenDestination.Exercises
+import com.example.gymtimer2.ui.MainScreenDestination.LocalSongs
+import com.example.gymtimer2.ui.MainScreenDestination.SavedSongs
+import com.example.gymtimer2.ui.MainScreenDestination.Settings
 import com.example.gymtimer2.ui.screens.add_exercise.AddExerciseScreen
 import com.example.gymtimer2.ui.screens.edit_exercise.EditExerciseScreen
 import com.example.gymtimer2.ui.screens.exercise_list.ExerciseListScreen
 import com.example.gymtimer2.ui.screens.edit_chorus.EditSongChorusScreen
 import com.example.gymtimer2.ui.screens.saved_songs.SavedSongsScreen
 import com.example.gymtimer2.ui.screens.local_songs.LocalSongsScreen
+import com.example.gymtimer2.ui.screens.settings.SettingsScreen
 
 data class NavItem(
     val label: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val destination: MainScreenDestination
 )
 
 @Composable
 fun MainScreen(
     onOpenOverlayClick: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-    initialIndex: Int = 0
+    settings: AppSettings,
+    onThemeSelected: (ThemeMode) -> Unit,
+    onAccentSelected: (AccentColor) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val navItemList = listOf(
-        NavItem("Exercícios", Icons.Default.Home),
-        NavItem("Novo", Icons.Default.Add),
-        NavItem("Músicas", Icons.Default.PlayArrow)
-    )
+    val mainScreenViewModel: MainScreenViewModel = viewModel()
+    val uiState by mainScreenViewModel.uiState.collectAsStateWithLifecycle()
 
-    var selectedIndex by remember { mutableIntStateOf(initialIndex) }
-    var exerciseToEdit by remember { mutableStateOf<ScheduledExerciseModel?>(null) }
-    var selectedDayId by remember { mutableStateOf<Long?>(null) }
-    var songToEdit by remember { mutableStateOf<SongModel?>(null) }
+    val navItemList = listOf(
+        NavItem(stringResource(R.string.nav_exercises), Icons.Default.Home, Exercises),
+        NavItem(stringResource(R.string.nav_new), Icons.Default.Add, AddExercise),
+        NavItem(stringResource(R.string.nav_music), Icons.Default.PlayArrow, SavedSongs),
+        NavItem(stringResource(R.string.nav_settings), Icons.Default.Settings, Settings)
+    )
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            NavigationBar {
-                navItemList.forEachIndexed { i, navItem ->
+            NavigationBar(
+                modifier = Modifier.fillMaxWidth(),
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 0.dp
+            ) {
+                navItemList.forEach { navItem ->
                     NavigationBarItem(
                         label = { Text(navItem.label) },
-                        selected = i == selectedIndex,
-                        onClick = {
-                            selectedIndex = i
-                        },
+                        selected = navItem.destination == uiState.destination,
+                        onClick = { mainScreenViewModel.navigateTo(navItem.destination) },
                         icon = {
                             Icon(
                                 imageVector = navItem.icon,
                                 contentDescription = navItem.label
                             )
-                        }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                 }
             }
         }
     ) { innerPadding ->
-        if (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 2) {
-            exerciseToEdit = null
-            songToEdit = null
-        }
-        when (selectedIndex) {
-            0 -> ExerciseListScreen(
+        when (val destination = uiState.destination) {
+            Exercises -> ExerciseListScreen(
                 modifier = Modifier.padding(innerPadding),
-                selectedDayId = selectedDayId,
-                onSelectDay = { selectedDayId = it },
+                selectedDayId = uiState.selectedDayId,
+                onSelectDay = mainScreenViewModel::selectDay,
                 onOpenOverlayClick = onOpenOverlayClick,
                 onEditExercise = { exercise ->
-                    exerciseToEdit = exercise
-                    selectedIndex = 10
+                    mainScreenViewModel.navigateTo(EditExercise(exercise))
                 },
             )
-            1 -> AddExerciseScreen(
+            AddExercise -> AddExerciseScreen(
                 modifier = Modifier.padding(innerPadding),
-                initialDayId = selectedDayId,
-                goBack = {
-                    selectedIndex = 0
-                }
+                initialDayId = uiState.selectedDayId,
+                goBack = { mainScreenViewModel.navigateTo(Exercises) }
             )
-            2 -> SavedSongsScreen(
+            SavedSongs -> SavedSongsScreen(
                 modifier = Modifier.padding(innerPadding),
-                onOpenSelection = { selectedIndex = 11 },
-                onEditSong = { song ->
-                    songToEdit = song
-                    selectedIndex = 12
-                },
-                goBack = {
-                    selectedIndex = 0
-                }
+                onOpenSelection = { mainScreenViewModel.navigateTo(LocalSongs) },
+                onEditSong = { song -> mainScreenViewModel.navigateTo(EditSongChorus(song)) },
+                goBack = { mainScreenViewModel.navigateTo(Exercises) }
             )
-            11 -> LocalSongsScreen(
-                modifier = Modifier.padding(innerPadding),
-                goBack = { selectedIndex = 2 }
+            Settings -> SettingsScreen(
+                settings = settings,
+                onThemeSelected = onThemeSelected,
+                onAccentSelected = onAccentSelected,
+                modifier = Modifier.padding(innerPadding)
             )
-            10 -> EditExerciseScreen(
+            LocalSongs -> LocalSongsScreen(
                 modifier = Modifier.padding(innerPadding),
-                scheduledExercise = exerciseToEdit!!,
-                goBack = {
-                    exerciseToEdit = null
-                    selectedIndex = 0
-                }
+                goBack = { mainScreenViewModel.navigateTo(SavedSongs) }
             )
-            12 -> EditSongChorusScreen(
+            is EditExercise -> EditExerciseScreen(
                 modifier = Modifier.padding(innerPadding),
-                songToEdit = songToEdit!!,
-                goBack = {
-                    songToEdit = null
-                    selectedIndex = 2
-                }
+                scheduledExercise = destination.exercise,
+                goBack = { mainScreenViewModel.navigateTo(Exercises) }
+            )
+            is EditSongChorus -> EditSongChorusScreen(
+                modifier = Modifier.padding(innerPadding),
+                songToEdit = destination.song,
+                goBack = { mainScreenViewModel.navigateTo(SavedSongs) }
             )
         }
     }

@@ -3,6 +3,7 @@ package com.example.gymtimer2.ui.components.music
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
+import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.ChorusModel
 
 fun deleteChorusDialog(context: Context, chorus: ChorusModel, onDelete: () -> Unit) {
@@ -26,7 +27,7 @@ fun deleteChorusDialog(context: Context, chorus: ChorusModel, onDelete: () -> Un
     dialog.setOnShowListener {
         val positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
         positiveButton.setTextColor(
-            context.getColor(android.R.color.holo_red_dark)
+            context.getColor(R.color.app_error)
         )
     }
 

@@ -7,5 +7,6 @@ data class SongModel(
     val title: String,
     val artist: String,
     val uriString: String,
-    val durationMs: Long? = null
+    val durationMs: Long? = null,
+    val albumId: Long? = null
 ): Serializable

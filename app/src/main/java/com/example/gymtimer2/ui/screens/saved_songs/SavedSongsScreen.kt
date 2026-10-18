@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -38,6 +38,7 @@ import com.example.gymtimer2.ui.components.music.deleteSongDialog
 import com.example.gymtimer2.util.hasAudioPermission
 import com.example.gymtimer2.util.requiredAudioPermission
 import com.example.gymtimer2.ui.screens.saved_songs.components.SongCard
+import com.example.gymtimer2.ui.components.PrimaryButton
 
 @Composable
 fun SavedSongsScreen(
@@ -95,13 +96,16 @@ fun SavedSongsScreen(
 
     BackHandler { goBack() }
 
-    Surface(modifier = modifier.fillMaxSize()) {
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
         MusicPermissionGate(
             hasPermission = hasPermission,
             onRequestPermission = { permissionLauncher.launch(requiredAudioPermission()) }
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Button(onClick = onOpenSelection, modifier = Modifier.fillMaxWidth()) {
+                PrimaryButton(onClick = onOpenSelection, modifier = Modifier.fillMaxWidth()) {
                     Text("Adicionar músicas")
                 }
 
@@ -136,7 +140,8 @@ fun SavedSongsScreen(
                                     deleteSongDialog(context, song){
                                         viewModel.deleteSong(song)
                                     }
-                                }
+                                },
+                                artworkRepository = app.container.songArtworkRepository
                             )
                         }
                     }

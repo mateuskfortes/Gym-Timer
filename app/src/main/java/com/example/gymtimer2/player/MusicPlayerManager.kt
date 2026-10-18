@@ -175,6 +175,17 @@ class MusicPlayerManager(
         }
     }
 
+    fun setPlaybackVolume(volume: Float) {
+        if (mediaPlayer == null) return
+
+        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            volume.toInt().coerceIn(0, maxVolume),
+            0
+        )
+    }
+
     private fun requestAudioFocus(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val attributes = AudioAttributes.Builder()

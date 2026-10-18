@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" role="img" aria-labelledby="title">
+  <title id="title">Gym Timer: cronômetro com halter</title>
+  <rect width="108" height="108" rx="24" fill="#503078"/>
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M47 21h14" stroke-width="6"/>
+    <path d="M54 24v8" stroke-width="5"/>
+    <path d="M78 36l5-5" stroke-width="5"/>
+    <circle cx="54" cy="59" r="25" stroke-width="5.5"/>
+    <path d="M40 59h28" stroke-width="4"/>
+  </g>
+  <g fill="#FFFFFF">
+    <rect x="34" y="53" width="5" height="12" rx="2"/>
+    <rect x="39" y="50" width="6" height="18" rx="2.5"/>
+    <rect x="63" y="50" width="6" height="18" rx="2.5"/>
+    <rect x="69" y="53" width="5" height="12" rx="2"/>
+  </g>
+</svg>

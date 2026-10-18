@@ -10,6 +10,7 @@ import android.view.WindowManager
 import com.example.gymtimer2.R
 import com.example.gymtimer2.databinding.FinishSetDialogBinding
 import com.example.gymtimer2.domain.model.ExerciseModel
+import com.example.gymtimer2.timer_overlay_service.OverlayAppearance
 import com.example.gymtimer2.timer_overlay_service.overlayWindowType
 
 enum class FinishSetAction { KEEP, NEXT_OR_FINISH }
@@ -22,6 +23,10 @@ class FinishSetDialogController(
 ) {
     private val binding = FinishSetDialogBinding.inflate(inflater)
     private var isVisible = false
+
+    fun applyAppearance(appearance: OverlayAppearance) {
+        appearance.applyToDialog(binding)
+    }
 
     private val layoutParams = WindowManager.LayoutParams(
         (context.resources.displayMetrics.density * 320).toInt(),

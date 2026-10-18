@@ -4,8 +4,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -22,10 +20,10 @@ fun WorkoutDaySelector(
         modifier = Modifier.horizontalScroll(rememberScrollState())
     ) {
         days.forEach { day ->
-            FilterChip(
+            AppFilterChip(
+                text = day.name,
                 selected = day.id == selectedDayId,
-                onClick = { onSelectDay(day.id) },
-                label = { Text(day.name) }
+                onClick = { onSelectDay(day.id) }
             )
         }
     }

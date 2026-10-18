@@ -20,6 +20,7 @@ import com.example.gymtimer2.domain.model.WorkoutScheduleError
 import com.example.gymtimer2.domain.model.WorkoutScheduleException
 import com.example.gymtimer2.player.MusicPlayerManager
 import com.example.gymtimer2.timer_overlay_service.components.remove_area.RemoveAreaController
+import com.example.gymtimer2.timer_overlay_service.OverlayAppearance
 import com.example.gymtimer2.timer_overlay_service.overlayWindowType
 import com.example.gymtimer2.util.hasAudioPermission
 import kotlinx.coroutines.CancellationException
@@ -32,14 +33,14 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.abs
 
-private const val FLOAT_TIMER_WIDTH_DP = 280
+private const val FLOAT_TIMER_MAX_WIDTH_DP = 280
 private const val FLOAT_TIMER_SCREEN_MARGIN_DP = 32
 private const val ACTION_TEXT_SIZE_SP = 13f
 private const val COUNTDOWN_TEXT_SIZE_SP = 26f
 
-private fun overlayWidthPx(context: Context): Int {
+private fun maxOverlayWidthPx(context: Context): Int {
     val density = context.resources.displayMetrics.density
-    val preferredWidth = (FLOAT_TIMER_WIDTH_DP * density).toInt()
+    val preferredWidth = (FLOAT_TIMER_MAX_WIDTH_DP * density).toInt()
     val availableWidth = (
         context.resources.displayMetrics.widthPixels - FLOAT_TIMER_SCREEN_MARGIN_DP * density
     ).toInt().coerceAtLeast(1)
@@ -60,9 +61,10 @@ class FloatTimerController(
     private val binding = FloatTimerBinding.inflate(inflater)
     private val removeAreaController = RemoveAreaController(context, inflater, windowManager)
     private val finishDialog = FinishSetDialogController(context, inflater, windowManager, ::onFinishSelection)
+    private var appearance = OverlayAppearance(context, app.container.appSettingsRepository.settings.value)
 
     private val layoutParams = WindowManager.LayoutParams(
-        overlayWidthPx(context),
+        WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
         overlayWindowType(),
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
@@ -80,8 +82,23 @@ class FloatTimerController(
     private var sequence = WorkoutSequence(emptyList())
 
     init {
+        updateExerciseNameMaxWidth()
+        binding.root.addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            val widthChanged = right - left != oldRight - oldLeft
+            val heightChanged = bottom - top != oldBottom - oldTop
+            if (isVisible && (widthChanged || heightChanged)) {
+                clampOverlayPositionToScreen()
+            }
+        }
+        applyAppearance()
         setOnClickListener()
         setOnTouchListener()
+        scope.launch {
+            app.container.appSettingsRepository.settings.collect { settings ->
+                appearance = OverlayAppearance(context, settings)
+                applyAppearance()
+            }
+        }
         scope.launch {
             try {
                 sequence = WorkoutSequence(repository.orderedExerciseIdsFrom(initialExerciseId))
@@ -102,6 +119,8 @@ class FloatTimerController(
         val loaded = repository.getExerciseWithChorusesByExerciseId(exerciseId).first() ?: return false
         workoutExercise = loaded
         binding.exerciseName.text = loaded.exercise.name
+        updateExerciseNameMaxWidth()
+        refreshOverlayLayout()
         return true
     }
 
@@ -110,7 +129,7 @@ class FloatTimerController(
         stopTimer()
         state = WorkoutState.ON_SET
         setCompactRestLayout(false)
-        binding.root.setBackgroundResource(R.drawable.rounded_timer_background)
+        applyAppearance()
         binding.timer.text = context.getString(R.string.float_timer_end_set)
         playChorus()
     }
@@ -184,7 +203,7 @@ class FloatTimerController(
         }
         state = WorkoutState.RESTING
         setCompactRestLayout(true)
-        binding.root.setBackgroundResource(R.drawable.rounded_timer_rest_background)
+        applyAppearance()
         binding.timer.setTextSize(TypedValue.COMPLEX_UNIT_SP, COUNTDOWN_TEXT_SIZE_SP)
         binding.timer.text = formatRemaining(restMs)
         timer = object : CountDownTimer(restMs, 1000L) {
@@ -202,33 +221,53 @@ class FloatTimerController(
         stopTimer()
         state = WorkoutState.READY_TO_START
         setCompactRestLayout(false)
-        binding.root.setBackgroundResource(R.drawable.rounded_timer_background)
+        applyAppearance()
         binding.timer.text = context.getString(R.string.float_timer_start_set)
     }
 
     private fun setCompactRestLayout(compact: Boolean) {
         binding.exerciseName.visibility = if (compact) View.GONE else View.VISIBLE
+        if (!compact) updateExerciseNameMaxWidth()
         val timerParams = binding.timer.layoutParams as LinearLayout.LayoutParams
         timerParams.topMargin = if (compact) 0 else (4 * context.resources.displayMetrics.density).toInt()
         binding.timer.layoutParams = timerParams
 
-        layoutParams.width = if (compact) {
-            WindowManager.LayoutParams.WRAP_CONTENT
-        } else {
-            overlayWidthPx(context)
-        }
-        if (!compact) {
-            val maxX = ((context.resources.displayMetrics.widthPixels - layoutParams.width) / 2)
-                .coerceAtLeast(0)
-            layoutParams.x = layoutParams.x.coerceIn(-maxX, maxX)
-        }
+        refreshOverlayLayout()
+    }
+
+    private fun updateExerciseNameMaxWidth() {
+        val horizontalPadding = binding.root.paddingLeft + binding.root.paddingRight
+        binding.exerciseName.maxWidth = (maxOverlayWidthPx(context) - horizontalPadding).coerceAtLeast(1)
+    }
+
+    private fun refreshOverlayLayout() {
+        binding.root.requestLayout()
         if (isVisible) windowManager.updateViewLayout(binding.root, layoutParams)
+    }
+
+    private fun clampOverlayPositionToScreen() {
+        val screenWidth = context.resources.displayMetrics.widthPixels
+        val screenHeight = context.resources.displayMetrics.heightPixels
+        val maxX = ((screenWidth - binding.root.width) / 2).coerceAtLeast(0)
+        val maxY = ((screenHeight - binding.root.height) / 2).coerceAtLeast(0)
+        val clampedX = layoutParams.x.coerceIn(-maxX, maxX)
+        val clampedY = layoutParams.y.coerceIn(-maxY, maxY)
+        if (clampedX != layoutParams.x || clampedY != layoutParams.y) {
+            layoutParams.x = clampedX
+            layoutParams.y = clampedY
+            if (isVisible) windowManager.updateViewLayout(binding.root, layoutParams)
+        }
     }
 
     private fun stopTimer() {
         timer?.cancel()
         timer = null
         binding.timer.setTextSize(TypedValue.COMPLEX_UNIT_SP, ACTION_TEXT_SIZE_SP)
+    }
+
+    private fun applyAppearance() {
+        appearance.applyToTimer(binding, state == WorkoutState.RESTING)
+        finishDialog.applyAppearance(appearance)
     }
 
     private fun formatRemaining(millis: Long): String {

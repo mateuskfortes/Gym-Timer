@@ -8,13 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +24,10 @@ import androidx.compose.ui.window.Dialog
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.util.formatMillisToMinSec
+import com.example.gymtimer2.ui.components.PrimaryButton
+import com.example.gymtimer2.ui.components.AppCheckbox
+import com.example.gymtimer2.ui.components.SecondaryButton
+import com.example.gymtimer2.ui.components.softCardShadow
 
 @Composable
 fun SelectChorusesModal(
@@ -43,10 +44,12 @@ fun SelectChorusesModal(
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(16.dp),
+                .padding(16.dp)
+                .softCardShadow(MaterialTheme.shapes.extraLarge, 12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
-            )
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -85,7 +88,7 @@ fun SelectChorusesModal(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Checkbox(
+                                    AppCheckbox(
                                         checked = chorus.id in selectedChorusIds,
                                         onCheckedChange = { isChecked ->
                                             selectedChorusIds = if (isChecked) {
@@ -117,14 +120,14 @@ fun SelectChorusesModal(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    TextButton(
+                    SecondaryButton(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Cancelar")
                     }
 
-                    Button(
+                    PrimaryButton(
                         onClick = {
                             onConfirm(selectedChorusIds)
                             onDismiss()

@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -25,27 +24,32 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
+import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.ui.components.music.deleteChorusDialog
 import com.example.gymtimer2.ui.screens.edit_chorus.EditSongChorusViewModel
 import com.example.gymtimer2.util.formatMillisToMinSec
+import com.example.gymtimer2.ui.components.IconActionButton
+import com.example.gymtimer2.ui.components.softCardShadow
 
 @Composable
 fun ChorusCard(
     chorus: ChorusModel,
+    song: SongModel,
     playbackState: MusicPlaybackState,
     viewModel: EditSongChorusViewModel,
 ) {
-    val durationMs = viewModel.songToEdit.durationMs?.takeIf { it > 0 }
+    val durationMs = song.durationMs?.takeIf { it > 0 }
         ?: maxOf(chorus.startMs + 1, 1L)
     val sliderValue = chorus.startMs.toFloat().coerceIn(0f, durationMs.toFloat())
-    val isChorusPlaying = playbackState.isPlaying && playbackState.uri == viewModel.songToEdit.uriString
+    val isChorusPlaying = playbackState.isPlaying && playbackState.uri == song.uriString
     val context = LocalContext.current
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().softCardShadow(MaterialTheme.shapes.medium, 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -67,7 +71,7 @@ fun ChorusCard(
                     )
                 }
 
-                IconButton(
+                IconActionButton(
                     onClick = {
                         if (isChorusPlaying) {
                             viewModel.stopPlayback()
@@ -82,7 +86,7 @@ fun ChorusCard(
                     )
                 }
 
-                IconButton(onClick = { deleteChorusDialog(context, chorus) {viewModel.deleteChorus(chorus) }}) {
+                IconActionButton(onClick = { deleteChorusDialog(context, chorus) {viewModel.deleteChorus(chorus) }}) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
                         contentDescription = "Excluir refrão"

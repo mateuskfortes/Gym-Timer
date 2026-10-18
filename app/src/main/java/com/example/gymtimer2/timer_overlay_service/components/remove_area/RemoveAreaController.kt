@@ -7,6 +7,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.WindowManager
 import com.example.gymtimer2.databinding.FloatTimerRemoveAreaBinding
+import com.example.gymtimer2.R
 
 const val REMOVE_AREA_HEIGHT = 200
 const val REMOVE_AREA_WIDTH = 200
@@ -85,11 +86,11 @@ class RemoveAreaController {
         if (highlight) {
             binding.removeIcon.scaleX = 1.3f
             binding.removeIcon.scaleY = 1.3f
-            binding.removeAreaBackground.setBackgroundColor(0xFFFF8888.toInt())
+            binding.removeAreaBackground.setBackgroundResource(R.drawable.app_remove_area_active)
         } else {
             binding.removeIcon.scaleX = 1f
             binding.removeIcon.scaleY = 1f
-            binding.removeAreaBackground.setBackgroundColor(0xFFCC0000.toInt())
+            binding.removeAreaBackground.setBackgroundResource(R.drawable.app_remove_area)
         }
     }
 

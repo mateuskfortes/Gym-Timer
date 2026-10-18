@@ -8,12 +8,16 @@ import com.example.gymtimer2.data.repository.WorkoutRepository
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.player.MusicPlayerManager
 import com.example.gymtimer2.util.hasAudioPermission
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LocalSongsViewModel(
     private val repository: WorkoutRepository,
@@ -22,27 +26,21 @@ class LocalSongsViewModel(
 
     private val _uiState = MutableStateFlow(LocalSongsUiState())
     val uiState: StateFlow<LocalSongsUiState> = _uiState.asStateFlow()
+    private var savedSongsJob: Job? = null
 
-    fun loadSongs(savedSongsIds: List<Long>) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-
-            runCatching {
-                repository.getSongs()
-            }.onSuccess { songs ->
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        songs = songs.filter { song -> song.id !in savedSongsIds }
-                    )
-                }
-            }.onFailure { throwable ->
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = throwable.message ?: "Erro ao carregar músicas"
-                    )
-                }
+    private suspend fun loadSongs(savedSongsIds: List<Long>) {
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        try {
+            val savedIds = savedSongsIds.toHashSet()
+            val songs = withContext(Dispatchers.IO) {
+                repository.getSongs().filterNot { it.id in savedIds }
+            }
+            _uiState.update { it.copy(isLoading = false, songs = songs) }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            _uiState.update {
+                it.copy(isLoading = false, error = exception.message ?: "Erro ao carregar músicas")
             }
         }
     }
@@ -62,18 +60,16 @@ class LocalSongsViewModel(
     }
 
     fun saveSelectedSongs(cbFunc: () -> Unit) {
-        val songsToSave = _uiState.value.songs.filter { song ->
-            song.id in _uiState.value.selectedSongIds
-        }
+        val state = _uiState.value
+        if (state.isSaving) return
+        val songsToSave = state.songs.filter { it.id in state.selectedSongIds }
 
         if (songsToSave.isEmpty()) return
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null) }
-
-            runCatching {
-                repository.saveSongs(songsToSave)
-            }.onSuccess {
+            try {
+                withContext(Dispatchers.IO) { repository.saveSongs(songsToSave) }
                 _uiState.update { state ->
                     state.copy(
                         isSaving = false,
@@ -81,11 +77,13 @@ class LocalSongsViewModel(
                     )
                 }
                 cbFunc()
-            }.onFailure { throwable ->
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
                         isSaving = false,
-                        error = throwable.message ?: "Erro ao salvar seleção"
+                        error = exception.message ?: "Erro ao salvar seleção"
                     )
                 }
             }
@@ -125,15 +123,20 @@ class LocalSongsViewModel(
 
         _uiState.update { it.copy(hasPermission = hasPermission) }
 
-        if (hasPermission) {
-            viewModelScope.launch {
-                repository.getSavedSongsIds().collect {
-                    loadSongs(it)
-                }
+        if (hasPermission && savedSongsJob?.isActive != true) {
+            savedSongsJob = viewModelScope.launch {
+                repository.getSavedSongsIds().collectLatest(::loadSongs)
             }
+        } else if (!hasPermission) {
+            stopObservingSongs()
         }
 
         return hasPermission
+    }
+
+    fun stopObservingSongs() {
+        savedSongsJob?.cancel()
+        savedSongsJob = null
     }
 
     companion object {

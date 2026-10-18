@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +22,8 @@ import com.example.gymtimer2.domain.model.ChorusModel
 import com.example.gymtimer2.domain.model.MusicPlaybackState
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.util.formatMillisToMinSec
+import com.example.gymtimer2.ui.components.softCardShadow
+import com.example.gymtimer2.ui.components.IconActionButton
 
 @Composable
 fun ExerciseChorusCard(
@@ -36,10 +37,11 @@ fun ExerciseChorusCard(
     val isChorusPlaying = playbackState.isPlaying && playbackState.uri == song.uriString
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().softCardShadow(MaterialTheme.shapes.medium, 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -72,7 +74,7 @@ fun ExerciseChorusCard(
                 }
 
                 // Play/Stop button
-                IconButton(
+                IconActionButton(
                     onClick = {
                         if (isChorusPlaying) {
                             onStop()
@@ -88,7 +90,7 @@ fun ExerciseChorusCard(
                 }
 
                 // Remove button
-                IconButton(onClick = onRemove) {
+                IconActionButton(onClick = onRemove) {
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = "Remover refrão"

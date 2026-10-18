@@ -10,12 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,6 +32,9 @@ import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.ExerciseModel
 import com.example.gymtimer2.domain.model.ScheduledExerciseModel
 import com.example.gymtimer2.ui.components.WorkoutDaySelector
+import com.example.gymtimer2.ui.components.PrimaryButton
+import com.example.gymtimer2.ui.components.AppTextField
+import com.example.gymtimer2.ui.components.SecondaryButton
 import com.example.gymtimer2.ui.components.chorus.ExerciseChorusCard
 import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
 
@@ -95,15 +95,16 @@ fun EditExerciseScreen(
         Text(stringResource(R.string.workout_day_label))
         WorkoutDaySelector(days, viewModel.selectedDayId, viewModel::selectDay)
 
-        OutlinedTextField(
+        AppTextField(
             value = viewModel.name,
             onValueChange = viewModel::onNameChange,
             modifier = Modifier.fillMaxWidth(),
             label = { Text(stringResource(R.string.add_exercise_name_label)) },
-            singleLine = true
+            singleLine = true,
+            outlined = true
         )
 
-        OutlinedTextField(
+        AppTextField(
             value = viewModel.weight,
             onValueChange = viewModel::onWeightChange,
             modifier = Modifier.fillMaxWidth(),
@@ -113,10 +114,11 @@ fun EditExerciseScreen(
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
-            )
+            ),
+            outlined = true
         )
 
-        OutlinedTextField(
+        AppTextField(
             value = viewModel.restSeconds,
             onValueChange = viewModel::onRestSecondsChange,
             modifier = Modifier.fillMaxWidth(),
@@ -124,10 +126,11 @@ fun EditExerciseScreen(
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
-            )
+            ),
+            outlined = true
         )
 
-        OutlinedTextField(
+        AppTextField(
             value = viewModel.chorusDelay,
             onValueChange = viewModel::onChorusDelayChange,
             modifier = Modifier.fillMaxWidth(),
@@ -135,7 +138,8 @@ fun EditExerciseScreen(
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
-            )
+            ),
+            outlined = true
         )
 
         // Choruses section
@@ -151,7 +155,7 @@ fun EditExerciseScreen(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            TextButton(
+            SecondaryButton(
                 onClick = { showSelectModal = true }
             ) {
                 Text("+ Adicionar")
@@ -183,14 +187,14 @@ fun EditExerciseScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            TextButton(
+            SecondaryButton(
                 onClick = { viewModel.discardChanges(goBack) },
                 modifier = Modifier.weight(1f)
             ) {
                 Text(stringResource(R.string.cancel_button))
             }
 
-            Button(
+            PrimaryButton(
                 onClick = {
                     viewModel.updateExercise(goBack)
                 },

@@ -9,7 +9,7 @@
         android:id="@+id/removeAreaBackground"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/holo_red_dark" />
+        android:background="@drawable/app_remove_area" />
 
     <TextView
         android:id="@+id/removeIcon"
@@ -17,9 +17,10 @@
         android:layout_height="32dp"
         android:layout_centerInParent="true"
         android:gravity="center"
-        android:text="✕"
+        android:contentDescription="@string/remove_timer_overlay_description"
+        android:text="@string/remove_timer_overlay"
         android:textSize="18sp"
-        android:textColor="@android:color/white"
+        android:textColor="@color/app_error"
         android:background="@android:color/transparent" />
 
 </RelativeLayout>

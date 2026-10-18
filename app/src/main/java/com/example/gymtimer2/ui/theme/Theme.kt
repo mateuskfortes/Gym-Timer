@@ -1,58 +1,97 @@
 package com.example.gymtimer2.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.example.gymtimer2.domain.model.AccentColor
 
 @Composable
 fun GymTimerTheme(
-    darkTheme: Boolean = false, // isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = false,
+    accentColor: AccentColor = AccentColor.PURPLE,
+    style: AppStyle = (if (darkTheme) AppStyle.Dark else AppStyle.Light).withAccent(accentColor, darkTheme),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val colorScheme = if (darkTheme) {
+        darkColorScheme(
+            primary = style.primary,
+            onPrimary = Color(0xFF1C1C1E),
+            primaryContainer = style.primary.copy(alpha = 0.2f),
+            onPrimaryContainer = style.onSurface,
+            inversePrimary = style.primary,
+            secondary = style.secondary,
+            onSecondary = Color(0xFF1C1C1E),
+            secondaryContainer = style.surfaceVariant,
+            onSecondaryContainer = style.onSurface,
+            tertiary = style.secondary,
+            onTertiary = Color(0xFF1C1C1E),
+            tertiaryContainer = style.surfaceVariant,
+            onTertiaryContainer = style.onSurface,
+            background = style.background,
+            onBackground = style.onSurface,
+            surface = style.surface,
+            onSurface = style.onSurface,
+            surfaceVariant = style.surfaceVariant,
+            onSurfaceVariant = style.onSurfaceVariant,
+            outline = style.divider,
+            outlineVariant = style.divider,
+            error = style.error,
+            onError = Color.White,
+            errorContainer = style.error.copy(alpha = 0.2f),
+            onErrorContainer = style.error,
+            surfaceTint = Color.Transparent
+        )
+    } else {
+        lightColorScheme(
+            primary = style.primary,
+            onPrimary = Color.White,
+            primaryContainer = style.primary.copy(alpha = 0.12f),
+            onPrimaryContainer = style.primary,
+            inversePrimary = style.primary,
+            secondary = style.secondary,
+            onSecondary = Color.White,
+            secondaryContainer = style.surfaceVariant,
+            onSecondaryContainer = style.onSurface,
+            tertiary = style.secondary,
+            onTertiary = Color.White,
+            tertiaryContainer = style.surfaceVariant,
+            onTertiaryContainer = style.onSurface,
+            background = style.background,
+            onBackground = style.onSurface,
+            surface = style.surface,
+            onSurface = style.onSurface,
+            surfaceVariant = style.surfaceVariant,
+            onSurfaceVariant = style.onSurfaceVariant,
+            outline = style.divider,
+            outlineVariant = style.divider,
+            error = style.error,
+            onError = Color.White,
+            errorContainer = style.error.copy(alpha = 0.12f),
+            onErrorContainer = style.error,
+            surfaceTint = Color.Transparent
+        )
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+    val shapes = Shapes(
+        extraSmall = RoundedCornerShape(8.dp),
+        small = RoundedCornerShape(12.dp),
+        medium = RoundedCornerShape(style.cornerRadius),
+        large = RoundedCornerShape(style.cornerRadius + 4.dp),
+        extraLarge = RoundedCornerShape(style.cornerRadius + 8.dp)
     )
+
+    CompositionLocalProvider(LocalAppStyle provides style) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            shapes = shapes,
+            content = content
+        )
+    }
 }

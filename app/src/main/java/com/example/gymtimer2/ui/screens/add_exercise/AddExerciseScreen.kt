@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +31,9 @@ import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.WeightUnit
 import com.example.gymtimer2.ui.components.WeightUnitChip
 import com.example.gymtimer2.ui.components.WorkoutDaySelector
+import com.example.gymtimer2.ui.components.PrimaryButton
+import com.example.gymtimer2.ui.components.LabeledOutlinedTextField
+import com.example.gymtimer2.ui.components.FormFieldLabel
 import com.example.gymtimer2.ui.components.chorus.SelectChorusesModal
 
 @Composable
@@ -75,99 +78,101 @@ fun AddExerciseScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
-        Text(
-            text = stringResource(R.string.add_exercise_title),
-            style = MaterialTheme.typography.headlineSmall
-        )
-
-        Text(stringResource(R.string.workout_day_label))
-        WorkoutDaySelector(days, viewModel.selectedDayId, viewModel::selectDay)
-
-        OutlinedTextField(
-            value = viewModel.name,
-            onValueChange = viewModel::onNameChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(stringResource(R.string.add_exercise_name_label)) },
-            singleLine = true
-        )
-
-        OutlinedTextField(
-            value = viewModel.weight,
-            onValueChange = viewModel::onWeightChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(stringResource(R.string.add_exercise_weight_label)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
-            )
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(top = 16.dp, bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            WeightUnitChip(
-                text = WeightUnit.TOTAL_KG.label,
-                selected = viewModel.weightUnit == WeightUnit.TOTAL_KG,
-                onClick = { viewModel.onWeightUnitChange(WeightUnit.TOTAL_KG) }
-            )
-
-            WeightUnitChip(
-                text = WeightUnit.MACHINE_STACK_UNITS.label,
-                selected = viewModel.weightUnit == WeightUnit.MACHINE_STACK_UNITS,
-                onClick = { viewModel.onWeightUnitChange(WeightUnit.MACHINE_STACK_UNITS) }
-            )
-        }
-
-        OutlinedTextField(
-            value = viewModel.restSeconds,
-            onValueChange = viewModel::onRestSecondsChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(stringResource(R.string.add_exercise_rest_label)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
-            )
-        )
-
-        OutlinedTextField(
-            value = viewModel.chorusDelay,
-            onValueChange = viewModel::onChorusDelayChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Delay do refrão (s)") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
-            )
-        )
-
-        if (selectedChorusIds.isNotEmpty()) {
             Text(
-                text = "Refrões (${selectedChorusIds.size})",
-                style = MaterialTheme.typography.titleSmall
+                text = stringResource(R.string.add_exercise_title),
+                style = MaterialTheme.typography.headlineSmall
             )
-        }
 
-        Button(
-            onClick = { showChorusModal = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("+ Adicionar Refrão")
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                onClick = { viewModel.insertExercise(goBack) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(stringResource(R.string.save_button))
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                FormFieldLabel(stringResource(R.string.workout_day_label))
+                WorkoutDaySelector(days, viewModel.selectedDayId, viewModel::selectDay)
             }
+
+            LabeledOutlinedTextField(
+                value = viewModel.name,
+                onValueChange = viewModel::onNameChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = stringResource(R.string.add_exercise_name_label)
+            )
+
+            LabeledOutlinedTextField(
+                value = viewModel.weight,
+                onValueChange = viewModel::onWeightChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = stringResource(R.string.add_exercise_weight_label),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                )
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                FormFieldLabel(stringResource(R.string.weight_unit_label))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    WeightUnitChip(
+                        text = WeightUnit.TOTAL_KG.label,
+                        selected = viewModel.weightUnit == WeightUnit.TOTAL_KG,
+                        onClick = { viewModel.onWeightUnitChange(WeightUnit.TOTAL_KG) }
+                    )
+
+                    WeightUnitChip(
+                        text = WeightUnit.MACHINE_STACK_UNITS.label,
+                        selected = viewModel.weightUnit == WeightUnit.MACHINE_STACK_UNITS,
+                        onClick = { viewModel.onWeightUnitChange(WeightUnit.MACHINE_STACK_UNITS) }
+                    )
+                }
+            }
+
+            LabeledOutlinedTextField(
+                value = viewModel.restSeconds,
+                onValueChange = viewModel::onRestSecondsChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = stringResource(R.string.add_exercise_rest_label),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                )
+            )
+
+            LabeledOutlinedTextField(
+                value = viewModel.chorusDelay,
+                onValueChange = viewModel::onChorusDelayChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = stringResource(R.string.add_exercise_chorus_delay_label),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                )
+            )
+
+            if (selectedChorusIds.isNotEmpty()) {
+                Text(
+                    text = "Refrões (${selectedChorusIds.size})",
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
+
+            PrimaryButton(
+                onClick = { showChorusModal = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("+ Adicionar Refrão")
+            }
+        }
+        PrimaryButton(
+            onClick = { viewModel.insertExercise(goBack) },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+        ) {
+            Text(stringResource(R.string.save_button))
         }
     }
 }

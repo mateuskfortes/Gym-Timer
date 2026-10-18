@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/finish_set_title"
-        android:textColor="@color/white"
+        android:textColor="@color/app_text"
         android:textSize="20sp"
         android:textStyle="bold" />
 
@@ -21,7 +21,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:textColor="@color/white"
+        android:textColor="@color/app_text"
         android:textSize="16sp" />
 
     <TextView
@@ -29,7 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textColor="@color/white" />
+        android:textColor="@color/app_text_muted" />
 
     <EditText
         android:id="@+id/newWeight"
@@ -38,18 +38,23 @@
         android:layout_marginTop="12dp"
         android:hint="@string/new_weight_hint"
         android:inputType="number"
+        android:background="@drawable/app_input_background"
+        android:importantForAutofill="no"
         android:maxLines="1"
-        android:textColor="@color/white"
-        android:textColorHint="#BBBBBB" />
+        android:minHeight="48dp"
+        android:padding="12dp"
+        android:textColor="@color/app_text"
+        android:textColorHint="@color/app_text_muted" />
 
     <TextView
         android:id="@+id/errorText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#FFFF8888"
+        android:textColor="@color/app_error"
         android:visibility="gone" />
 
     <LinearLayout
+        style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -57,17 +62,27 @@
 
         <Button
             android:id="@+id/keepButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@drawable/app_secondary_button_background"
+            android:minHeight="48dp"
+            android:textAllCaps="false"
+            android:textColor="@color/app_text"
             android:text="@string/keep_exercise" />
 
         <Button
             android:id="@+id/nextButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
+            android:background="@drawable/app_primary_button_background"
+            android:minHeight="48dp"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
             android:text="@string/next_exercise" />
     </LinearLayout>
 </LinearLayout>

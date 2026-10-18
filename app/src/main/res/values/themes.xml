@@ -1,5 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="Theme.GymTimer2" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorAccent">@color/app_primary</item>
+        <item name="android:colorControlActivated">@color/app_primary</item>
+        <item name="android:colorControlHighlight">@color/app_interaction_highlight</item>
+        <item name="android:colorButtonNormal">@color/app_surface_variant</item>
+        <item name="android:textColorPrimary">@color/app_text</item>
+        <item name="android:textColorSecondary">@color/app_text_muted</item>
+        <item name="android:statusBarColor">@color/app_surface</item>
+        <item name="android:navigationBarColor">@color/app_surface</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">@color/app_surface_variant</item>
+        <item name="android:alertDialogTheme">@style/Theme.GymTimer2.AlertDialog</item>
+    </style>
 
-    <style name="Theme.GymTimer2" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.GymTimer2.AlertDialog" parent="android:Theme.Material.Light.Dialog.Alert">
+        <item name="android:colorAccent">@color/app_primary</item>
+        <item name="android:windowBackground">@drawable/finish_set_background</item>
+        <item name="android:textColorPrimary">@color/app_text</item>
+        <item name="android:textColorSecondary">@color/app_text_muted</item>
+        <item name="android:buttonBarButtonStyle">@style/Theme.GymTimer2.AlertDialog.Button</item>
+    </style>
+
+    <style name="Theme.GymTimer2.AlertDialog.Button" parent="android:Widget.Material.Button.Borderless">
+        <item name="android:textColor">@color/app_primary</item>
+        <item name="android:minHeight">40dp</item>
+    </style>
 </resources>
