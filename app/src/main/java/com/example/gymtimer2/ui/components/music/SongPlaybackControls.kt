@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.MusicPlaybackState
 import com.example.gymtimer2.ui.components.IconActionButton
@@ -31,7 +32,7 @@ private val PlaybackButtonSize = 48.dp
 private val PlaybackButtonGap = 8.dp
 // Align the button with the slider track, above the elapsed and total time labels.
 private val PlaybackButtonProgressOffset = (-10).dp
-private const val PlaybackAnimationDurationMs = 280
+private const val PLAYBACK_ANIMATION_DURATION_MS = 280
 
 @Composable
 fun SongPlaybackControls(
@@ -48,7 +49,7 @@ fun SongPlaybackControls(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .animateContentSize(animationSpec = tween(PlaybackAnimationDurationMs))
+            .animateContentSize(animationSpec = tween(PLAYBACK_ANIMATION_DURATION_MS))
     ) {
         val buttonOffset by animateDpAsState(
             targetValue = if (showProgress) {
@@ -56,12 +57,12 @@ fun SongPlaybackControls(
             } else {
                 (maxWidth - PlaybackButtonSize) / 2
             },
-            animationSpec = tween(PlaybackAnimationDurationMs),
+            animationSpec = tween(PLAYBACK_ANIMATION_DURATION_MS),
             label = "song_playback_button_position"
         )
         val buttonVerticalOffset by animateDpAsState(
             targetValue = if (showProgress) PlaybackButtonProgressOffset else 0.dp,
-            animationSpec = tween(PlaybackAnimationDurationMs),
+            animationSpec = tween(PLAYBACK_ANIMATION_DURATION_MS),
             label = "song_playback_button_vertical_position"
         )
 
@@ -71,15 +72,15 @@ fun SongPlaybackControls(
                 .fillMaxWidth()
                 .padding(end = PlaybackButtonSize + PlaybackButtonGap)
                 .align(Alignment.CenterStart),
-            enter = fadeIn(tween(PlaybackAnimationDurationMs)) +
+            enter = fadeIn(tween(PLAYBACK_ANIMATION_DURATION_MS)) +
                 expandHorizontally(
                     expandFrom = Alignment.Start,
-                    animationSpec = tween(PlaybackAnimationDurationMs)
+                    animationSpec = tween(PLAYBACK_ANIMATION_DURATION_MS)
                 ),
-            exit = fadeOut(tween(PlaybackAnimationDurationMs)) +
+            exit = fadeOut(tween(PLAYBACK_ANIMATION_DURATION_MS)) +
                 shrinkHorizontally(
                     shrinkTowards = Alignment.Start,
-                    animationSpec = tween(PlaybackAnimationDurationMs)
+                    animationSpec = tween(PLAYBACK_ANIMATION_DURATION_MS)
                 )
         ) {
             MusicSeekBar(
@@ -92,7 +93,12 @@ fun SongPlaybackControls(
             onClick = if (isSongPlaying) onStop else onPlay,
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .offset(x = buttonOffset, y = buttonVerticalOffset)
+                .offset {
+                    IntOffset(
+                        x = buttonOffset.roundToPx(),
+                        y = buttonVerticalOffset.roundToPx()
+                    )
+                }
                 .size(PlaybackButtonSize)
         ) {
             Icon(

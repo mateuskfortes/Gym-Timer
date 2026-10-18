@@ -1,0 +1,74 @@
+config:
+  validation: true
+  warningsAsErrors: true
+
+complexity:
+  CyclomaticComplexMethod:
+    allowedComplexity: 10
+    ignoreSimpleWhenEntries: true
+  # Compose UI nests DSL lambdas heavily; use cyclomatic and method length checks there instead.
+  CognitiveComplexMethod:
+    excludes: ['**/ui/**']
+  LabeledExpression:
+    active: false
+  TooManyFunctions:
+    allowedFunctionsPerFile: 20
+    allowedFunctionsPerClass: 30
+    allowedFunctionsPerInterface: 20
+    allowedFunctionsPerObject: 20
+    allowedFunctionsPerEnum: 20
+  LongMethod:
+    allowedLines: 120
+
+exceptions:
+  TooGenericExceptionCaught:
+    excludes: ['**/LocalSongsViewModel.kt']
+
+comments:
+  UndocumentedPublicClass:
+    active: false
+  UndocumentedPublicFunction:
+    active: false
+  UndocumentedPublicProperty:
+    active: false
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+  FunctionNameMaxLength:
+    active: false
+  MatchingDeclarationName:
+    active: false
+  PackageNaming:
+    packagePattern: '[a-z]+(\.[a-z][A-Za-z0-9_]*)*'
+
+potential-bugs:
+  LateinitUsage:
+    active: false
+
+style:
+  # Keep the analyzer focused on behavior and complexity instead of formatting preferences.
+  BracesOnIfStatements:
+    active: false
+  BracesOnWhenStatements:
+    active: false
+  CascadingCallWrapping:
+    active: false
+  ClassOrdering:
+    active: false
+  ExpressionBodySyntax:
+    active: false
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: false
+  ReturnCount:
+    active: false
+  DataClassContainsFunctions:
+    active: false
+  UnnecessaryParentheses:
+    active: false
+  UnderscoresInNumericLiterals:
+    active: false
+  WildcardImport:
+    active: false

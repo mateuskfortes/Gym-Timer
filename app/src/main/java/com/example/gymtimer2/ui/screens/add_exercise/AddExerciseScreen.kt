@@ -173,12 +173,17 @@ fun AddExerciseScreen(
                 onRemove = viewModel::removeChorusFromExercise
             )
         }
-        PrimaryButton(
-            onClick = { viewModel.insertExercise(goBack) },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
-        ) {
-            Text(stringResource(R.string.save_button))
-        }
+        ExerciseSaveButton(onSave = { viewModel.insertExercise(goBack) })
+    }
+}
+
+@Composable
+private fun ExerciseSaveButton(onSave: () -> Unit) {
+    PrimaryButton(
+        onClick = onSave,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+    ) {
+        Text(stringResource(R.string.save_button))
     }
 }
 

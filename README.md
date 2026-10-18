@@ -40,6 +40,16 @@ O projeto já inclui o **Android Lint** por meio do plugin Android Gradle. Para 
 
 O relatório fica em `app/build/reports/lint-results-devDebug.html`. Erros fazem a tarefa falhar; avisos ficam registrados no relatório.
 
+### Detekt: complexidade e qualidade Kotlin
+
+Na raiz do repositório, execute o script:
+
+```bash
+./analyze-code.sh
+```
+
+O script executa `:app:detekt` pelo Gradle Wrapper; não precisa de emulador. Para passar opções ao Gradle, acrescente-as ao comando, por exemplo `./analyze-code.sh --console=plain`. O Detekt habilita as regras embutidas com `allRules`; `config/detekt/detekt.yml` desativa convenções de baixo sinal e verificações de formatação/documentação automática. A complexidade cognitiva fica excluída de `ui/`, onde as lambdas do Compose geravam ruído. A complexidade ciclomática continua ativa em todo o Kotlin, com limite 10 por método; métodos têm limite de 120 linhas. Os relatórios HTML, XML, Markdown e SARIF são gravados em `app/build/reports/detekt/`. Se houver violações, o comando termina com erro e mostra arquivo e linha para orientar a correção.
+
 Na primeira abertura após atualizar uma instalação antiga, todos os exercícios existentes aparecem em **Dia 1**, na ordem dos IDs. Para criar ou renomear dias, use os botões ao lado de **Dias de treino**. Só é possível excluir um dia vazio, e deve restar ao menos um dia.
 
 ## Rodar no celular por USB ou Wi-Fi

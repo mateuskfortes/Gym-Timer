@@ -72,7 +72,7 @@
     <string name="skip_next_exercise">Pular próximo exercício</string>
     <string name="finish_workout">Concluir treino</string>
     <string name="invalid_weight">Informe um peso inteiro válido.</string>
-    <string name="loading_exercise">Carregando...</string>
+    <string name="loading_exercise">Carregando…</string>
     <string name="loading_content">Carregando…</string>
     <string name="load_day_failed">Não foi possível carregar os exercícios deste dia.</string>
     <string name="day_not_found">Dia de treino inexistente.</string>

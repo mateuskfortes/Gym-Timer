@@ -27,8 +27,8 @@ fun ExerciseChorusSection(
     onPlay: (SongModel, ChorusModel) -> Unit,
     onStop: () -> Unit,
     onRemove: (Long) -> Unit,
-    addEnabled: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    addEnabled: Boolean = true
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),

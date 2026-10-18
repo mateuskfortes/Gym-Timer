@@ -319,70 +319,90 @@ class FloatTimerController(
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setOnTouchListener() {
-        binding.root.setOnTouchListener(object : View.OnTouchListener {
-            var accumulatedX = 0f
-            var accumulatedY = 0f
-            var previousX = 0f
-            var previousY = 0f
+        binding.root.setOnTouchListener(TimerTouchListener())
+    }
 
-            override fun onTouch(view: View?, event: MotionEvent?): Boolean {
-                event ?: return false
-                val root = binding.root
-                val screenWidth = context.resources.displayMetrics.widthPixels
-                val screenHeight = context.resources.displayMetrics.heightPixels
-                val minX = -(screenWidth - root.width) / 2f
-                val maxX = (screenWidth - root.width) / 2f
-                val minY = -(screenHeight - root.height) / 2f
-                val maxY = (screenHeight - root.height) / 2f
+    private inner class TimerTouchListener : View.OnTouchListener {
+        private var accumulatedX = 0f
+        private var accumulatedY = 0f
+        private var previousX = 0f
+        private var previousY = 0f
 
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        accumulatedX = 0f
-                        accumulatedY = 0f
-                        previousX = event.rawX
-                        previousY = event.rawY
-                        return true
-                    }
-                    MotionEvent.ACTION_MOVE -> {
-                        val deltaX = event.rawX - previousX
-                        val deltaY = event.rawY - previousY
-                        accumulatedX += abs(deltaX)
-                        accumulatedY += abs(deltaY)
-                        layoutParams.x = (layoutParams.x + deltaX).coerceIn(minX, maxX).toInt()
-                        layoutParams.y = (layoutParams.y + deltaY).coerceIn(minY, maxY).toInt()
-                        if (isVisible) windowManager.updateViewLayout(root, layoutParams)
-                        if (removeAreaController.isVisible) {
-                            removeAreaController.setHighlight(
-                                removeAreaController.isOverRemoveArea(event.rawX, event.rawY)
-                            )
-                        } else if (accumulatedX > 10 || accumulatedY > 10) {
-                            removeAreaController.show()
-                        }
-                        previousX = event.rawX
-                        previousY = event.rawY
-                        return true
-                    }
-                    MotionEvent.ACTION_UP -> {
-                        val isClick = accumulatedX < 10f && accumulatedY < 10f
-                        accumulatedX = 0f
-                        accumulatedY = 0f
-                        if (isClick) view?.performClick()
-                        val overRemove = removeAreaController.isVisible &&
-                            removeAreaController.isOverRemoveArea(event.rawX, event.rawY)
-                        removeAreaController.hide()
-                        if (overRemove) onClose()
-                        return true
-                    }
-                    MotionEvent.ACTION_CANCEL -> {
-                        accumulatedX = 0f
-                        accumulatedY = 0f
-                        removeAreaController.hide()
-                        return true
-                    }
-                }
-                return false
+        override fun onTouch(view: View?, event: MotionEvent?): Boolean {
+            event ?: return false
+            if (
+                event.action == MotionEvent.ACTION_UP &&
+                accumulatedX < 10f && accumulatedY < 10f
+            ) {
+                view?.performClick()
             }
-        })
+            return when (event.action) {
+                MotionEvent.ACTION_DOWN -> handleDown(event)
+                MotionEvent.ACTION_MOVE -> handleMove(event)
+                MotionEvent.ACTION_UP -> handleUp(event)
+                MotionEvent.ACTION_CANCEL -> handleCancel()
+                else -> false
+            }
+        }
+
+        private fun handleDown(event: MotionEvent): Boolean {
+            accumulatedX = 0f
+            accumulatedY = 0f
+            previousX = event.rawX
+            previousY = event.rawY
+            return true
+        }
+
+        private fun handleMove(event: MotionEvent): Boolean {
+            val root = binding.root
+            val screen = context.resources.displayMetrics
+            val minX = -(screen.widthPixels - root.width) / 2f
+            val maxX = (screen.widthPixels - root.width) / 2f
+            val minY = -(screen.heightPixels - root.height) / 2f
+            val maxY = (screen.heightPixels - root.height) / 2f
+            val deltaX = event.rawX - previousX
+            val deltaY = event.rawY - previousY
+
+            accumulatedX += abs(deltaX)
+            accumulatedY += abs(deltaY)
+            layoutParams.x = (layoutParams.x + deltaX).coerceIn(minX, maxX).toInt()
+            layoutParams.y = (layoutParams.y + deltaY).coerceIn(minY, maxY).toInt()
+            if (isVisible) windowManager.updateViewLayout(root, layoutParams)
+            updateRemoveAreaHighlight(event)
+            previousX = event.rawX
+            previousY = event.rawY
+            return true
+        }
+
+        private fun updateRemoveAreaHighlight(event: MotionEvent) {
+            if (removeAreaController.isVisible) {
+                removeAreaController.setHighlight(
+                    removeAreaController.isOverRemoveArea(event.rawX, event.rawY)
+                )
+            } else if (accumulatedX > 10 || accumulatedY > 10) {
+                removeAreaController.show()
+            }
+        }
+
+        private fun handleUp(event: MotionEvent): Boolean {
+            resetAccumulatedMovement()
+            val overRemoveArea = removeAreaController.isVisible &&
+                removeAreaController.isOverRemoveArea(event.rawX, event.rawY)
+            removeAreaController.hide()
+            if (overRemoveArea) onClose()
+            return true
+        }
+
+        private fun handleCancel(): Boolean {
+            resetAccumulatedMovement()
+            removeAreaController.hide()
+            return true
+        }
+
+        private fun resetAccumulatedMovement() {
+            accumulatedX = 0f
+            accumulatedY = 0f
+        }
     }
 
     fun show() {

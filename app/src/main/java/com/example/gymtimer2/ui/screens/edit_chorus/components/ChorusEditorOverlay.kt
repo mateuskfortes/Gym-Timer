@@ -95,25 +95,7 @@ fun ChorusEditorOverlay(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SongCover(song, artworkRepository)
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = song.title,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = song.artist,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                ChorusOverlaySongHeader(song, artworkRepository)
 
                 AppTextField(
                     value = chorus.name,
@@ -123,127 +105,156 @@ fun ChorusEditorOverlay(
                     singleLine = true
                 )
 
-                PrimaryButton(
-                    onClick = {
-                        if (isPreviewPlaying) {
-                            viewModel.stopPlayback()
-                        } else {
-                            onPlay()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = if (isPreviewPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(if (isPreviewPlaying) "Parar refrão" else "Ouvir refrão")
-                }
-
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(text = "Escolha o início do refrão", style = MaterialTheme.typography.labelMedium)
-
-                    BoxWithConstraints(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(START_MARKER_AREA_HEIGHT)
-                    ) {
-                        val markerProgress = (chorus.startMs / maxDuration.toFloat()).coerceIn(0f, 1f)
-                        val markerOffsetY = (START_MARKER_AREA_HEIGHT - PLAYBACK_TRACK_HEIGHT) / 2 -
-                            START_MARKER_GAP - START_MARKER_HEIGHT
-                        val trackWidth = maxWidth - SLIDER_THUMB_WIDTH
-                        val markerOffsetX = trackWidth * markerProgress +
-                            SLIDER_THUMB_WIDTH / 2 - START_MARKER_WIDTH / 2
-                        val markerColor = Color.Black
-                        val progressPositionMs = if (isPreviewPlaying) {
-                            playbackState.currentPositionMs.toLong()
-                        } else {
-                            chorus.startMs
-                        }
-
-                        Slider(
-                            value = progressPositionMs.toFloat().coerceIn(0f, maxDuration.toFloat()),
-                            onValueChange = {
-                                viewModel.updateChorusStart(it.toLong())
-                                viewModel.seekTo(it.toInt())
-                            },
-                            valueRange = 0f..maxDuration.toFloat(),
-                            modifier = Modifier.fillMaxSize(),
-                            interactionSource = progressSliderInteractionSource,
-                            thumb = {
-                                SliderDefaults.Thumb(
-                                    interactionSource = progressSliderInteractionSource,
-                                    thumbSize = DpSize(
-                                        width = SLIDER_THUMB_WIDTH,
-                                        height = PLAYBACK_THUMB_HEIGHT
-                                    )
-                                )
-                            },
-                            track = { sliderState ->
-                                SliderDefaults.Track(
-                                    sliderState = sliderState,
-                                    modifier = Modifier.offset {
-                                        IntOffset(x = 0, y = PLAYBACK_TRACK_VERTICAL_OFFSET_PX)
-                                    }
-                                )
-                            }
-                        )
-                        StartMarkerTriangle(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .offset(x = markerOffsetX, y = markerOffsetY),
-                            pointsDown = true,
-                            color = markerColor
-                        )
-                        StartMarkerTriangle(
-                            modifier = Modifier
-                                .align(Alignment.BottomStart)
-                                .offset(x = markerOffsetX, y = -markerOffsetY),
-                            pointsDown = false,
-                            color = markerColor
-                        )
-                    }
-                    Text(
-                        text = "Início selecionado: ${formatMillisToMinSec(chorus.startMs)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Slider(
-                        value = chorus.volume ?: 0f,
-                        valueRange = 0f..viewModel.playerManager.audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).toFloat(),
-                        onValueChange = viewModel::updateChorusVolume,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                ChorusPreviewButton(isPlaying = isPreviewPlaying, onPlay = onPlay, onStop = viewModel::stopPlayback)
+                ChorusStartSelector(
+                    chorus = chorus,
+                    maxDuration = maxDuration,
+                    playbackState = playbackState,
+                    isPreviewPlaying = isPreviewPlaying,
+                    viewModel = viewModel,
+                    interactionSource = progressSliderInteractionSource
+                )
+                ChorusVolumeSlider(chorus, viewModel)
 
                 HorizontalDivider()
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    SecondaryButton(
-                        onClick = {
-                            viewModel.setChorusToEdit(null)
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cancelar")
-                    }
-
-                    PrimaryButton(
-                        onClick = {
-                            viewModel.saveUpdatedChorus()
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Salvar")
-                    }
-                }
+                ChorusEditorActions(onCancel = { viewModel.setChorusToEdit(null) }, onSave = viewModel::saveUpdatedChorus)
             }
         }
+    }
+}
+
+@Composable
+private fun ChorusOverlaySongHeader(song: SongModel, artworkRepository: SongArtworkRepository) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SongCover(song, artworkRepository)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(song.title, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = song.artist,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChorusPreviewButton(isPlaying: Boolean, onPlay: () -> Unit, onStop: () -> Unit) {
+    PrimaryButton(
+        onClick = if (isPlaying) onStop else onPlay,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Icon(
+            imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+            contentDescription = null
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        Text(if (isPlaying) "Parar refrão" else "Ouvir refrão")
+    }
+}
+
+@Composable
+private fun ChorusStartSelector(
+    chorus: ChorusModel,
+    maxDuration: Long,
+    playbackState: MusicPlaybackState,
+    isPreviewPlaying: Boolean,
+    viewModel: EditSongChorusViewModel,
+    interactionSource: MutableInteractionSource
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(text = "Escolha o início do refrão", style = MaterialTheme.typography.labelMedium)
+        ChorusTimelineSlider(
+            chorus = chorus,
+            maxDuration = maxDuration,
+            playbackState = playbackState,
+            isPreviewPlaying = isPreviewPlaying,
+            viewModel = viewModel,
+            interactionSource = interactionSource
+        )
+        Text(
+            text = "Início selecionado: ${formatMillisToMinSec(chorus.startMs)}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun ChorusTimelineSlider(
+    chorus: ChorusModel,
+    maxDuration: Long,
+    playbackState: MusicPlaybackState,
+    isPreviewPlaying: Boolean,
+    viewModel: EditSongChorusViewModel,
+    interactionSource: MutableInteractionSource
+) {
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxWidth().height(START_MARKER_AREA_HEIGHT)
+    ) {
+        val markerProgress = (chorus.startMs / maxDuration.toFloat()).coerceIn(0f, 1f)
+        val markerOffsetY = (START_MARKER_AREA_HEIGHT - PLAYBACK_TRACK_HEIGHT) / 2 -
+            START_MARKER_GAP - START_MARKER_HEIGHT
+        val trackWidth = maxWidth - SLIDER_THUMB_WIDTH
+        val markerOffsetX = trackWidth * markerProgress + SLIDER_THUMB_WIDTH / 2 - START_MARKER_WIDTH / 2
+        val progressPositionMs = if (isPreviewPlaying) playbackState.currentPositionMs.toLong() else chorus.startMs
+
+        Slider(
+            value = progressPositionMs.toFloat().coerceIn(0f, maxDuration.toFloat()),
+            onValueChange = {
+                viewModel.updateChorusStart(it.toLong())
+                viewModel.seekTo(it.toInt())
+            },
+            valueRange = 0f..maxDuration.toFloat(),
+            modifier = Modifier.fillMaxSize(),
+            interactionSource = interactionSource,
+            thumb = {
+                SliderDefaults.Thumb(
+                    interactionSource = interactionSource,
+                    thumbSize = DpSize(width = SLIDER_THUMB_WIDTH, height = PLAYBACK_THUMB_HEIGHT)
+                )
+            },
+            track = { sliderState ->
+                SliderDefaults.Track(
+                    sliderState = sliderState,
+                    modifier = Modifier.offset { IntOffset(x = 0, y = PLAYBACK_TRACK_VERTICAL_OFFSET_PX) }
+                )
+            }
+        )
+        StartMarkerTriangle(
+            modifier = Modifier.align(Alignment.TopStart).offset(x = markerOffsetX, y = markerOffsetY),
+            pointsDown = true,
+            color = Color.Black
+        )
+        StartMarkerTriangle(
+            modifier = Modifier.align(Alignment.BottomStart).offset(x = markerOffsetX, y = -markerOffsetY),
+            pointsDown = false,
+            color = Color.Black
+        )
+    }
+}
+
+@Composable
+private fun ChorusVolumeSlider(chorus: ChorusModel, viewModel: EditSongChorusViewModel) {
+    Slider(
+        value = chorus.volume ?: 0f,
+        valueRange = 0f..viewModel.playerManager.audioManager
+            .getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).toFloat(),
+        onValueChange = viewModel::updateChorusVolume,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun ChorusEditorActions(onCancel: () -> Unit, onSave: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        SecondaryButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text("Cancelar") }
+        PrimaryButton(onClick = onSave, modifier = Modifier.weight(1f)) { Text("Salvar") }
     }
 }
 
