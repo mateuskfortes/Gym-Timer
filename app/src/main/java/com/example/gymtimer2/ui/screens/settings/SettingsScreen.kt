@@ -40,6 +40,7 @@ import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.AccentColor
 import com.example.gymtimer2.domain.model.AppSettings
 import com.example.gymtimer2.domain.model.ThemeMode
+import com.example.gymtimer2.ui.components.ScreenTitle
 import com.example.gymtimer2.ui.theme.tone
 
 @Composable
@@ -55,11 +56,7 @@ fun SettingsScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 20.dp, vertical = 24.dp)
     ) {
-        Text(
-            text = stringResource(R.string.settings_title),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        ScreenTitle(stringResource(R.string.settings_title))
         Spacer(Modifier.height(28.dp))
         Text(stringResource(R.string.settings_appearance), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(12.dp))

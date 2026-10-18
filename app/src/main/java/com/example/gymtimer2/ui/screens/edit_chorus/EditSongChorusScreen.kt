@@ -34,8 +34,9 @@ import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.SongModel
 import com.example.gymtimer2.ui.components.AppTextField
 import com.example.gymtimer2.ui.components.IconActionButton
+import com.example.gymtimer2.ui.components.ScreenTitle
 import com.example.gymtimer2.ui.components.music.SongCover
-import com.example.gymtimer2.ui.components.music.MusicSeekBar
+import com.example.gymtimer2.ui.components.music.SongPlaybackControls
 import com.example.gymtimer2.util.formatMillisToMinSec
 import com.example.gymtimer2.ui.components.PrimaryButton
 import com.example.gymtimer2.ui.components.SecondaryButton
@@ -65,35 +66,47 @@ fun EditSongChorusScreen(
     val choruses by viewModel.choruses.collectAsStateWithLifecycle()
     val chorusToEdit by viewModel.chorusToEdit.collectAsStateWithLifecycle()
     val song by viewModel.songToEditState.collectAsStateWithLifecycle()
-    var showRenameDialog by remember { mutableStateOf(false) }
-    var songNameDraft by remember(song.id) { mutableStateOf(song.title) }
-    var isRenamingSong by remember { mutableStateOf(false) }
-    var renameSongFailed by remember { mutableStateOf(false) }
+    var showSongDetailsDialog by remember { mutableStateOf(false) }
+    var songTitleDraft by remember(song.id) { mutableStateOf(song.title) }
+    var artistDraft by remember(song.id) { mutableStateOf(song.artist) }
+    var isUpdatingSongDetails by remember { mutableStateOf(false) }
+    var songDetailsUpdateFailed by remember { mutableStateOf(false) }
 
-    if (showRenameDialog) {
+    if (showSongDetailsDialog) {
         AlertDialog(
             onDismissRequest = {
-                if (!isRenamingSong) showRenameDialog = false
+                if (!isUpdatingSongDetails) showSongDetailsDialog = false
             },
             containerColor = MaterialTheme.colorScheme.surface,
             tonalElevation = 0.dp,
-            title = { Text(stringResource(R.string.edit_song_name)) },
+            title = { Text(stringResource(R.string.edit_song_details_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     AppTextField(
-                        value = songNameDraft,
+                        value = songTitleDraft,
                         onValueChange = {
-                            songNameDraft = it
-                            renameSongFailed = false
+                            songTitleDraft = it
+                            songDetailsUpdateFailed = false
                         },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text(stringResource(R.string.song_name_label)) },
                         singleLine = true,
                         outlined = true
                     )
-                    if (renameSongFailed) {
+                    AppTextField(
+                        value = artistDraft,
+                        onValueChange = {
+                            artistDraft = it
+                            songDetailsUpdateFailed = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.song_artist_label)) },
+                        singleLine = true,
+                        outlined = true
+                    )
+                    if (songDetailsUpdateFailed) {
                         Text(
-                            text = stringResource(R.string.edit_song_name_failed),
+                            text = stringResource(R.string.edit_song_details_failed),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -103,26 +116,26 @@ fun EditSongChorusScreen(
             confirmButton = {
                 PrimaryButton(
                     onClick = {
-                        isRenamingSong = true
-                        renameSongFailed = false
-                        viewModel.renameSong(songNameDraft) { renamed ->
-                            isRenamingSong = false
-                            if (renamed) {
-                                showRenameDialog = false
+                        isUpdatingSongDetails = true
+                        songDetailsUpdateFailed = false
+                        viewModel.updateSongDetails(songTitleDraft, artistDraft) { updated ->
+                            isUpdatingSongDetails = false
+                            if (updated) {
+                                showSongDetailsDialog = false
                             } else {
-                                renameSongFailed = true
+                                songDetailsUpdateFailed = true
                             }
                         }
                     },
-                    enabled = songNameDraft.isNotBlank() && !isRenamingSong
+                    enabled = songTitleDraft.isNotBlank() && !isUpdatingSongDetails
                 ) {
                     Text(stringResource(R.string.save_button))
                 }
             },
             dismissButton = {
                 SecondaryButton(
-                    onClick = { showRenameDialog = false },
-                    enabled = !isRenamingSong
+                    onClick = { showSongDetailsDialog = false },
+                    enabled = !isUpdatingSongDetails
                 ) {
                     Text(stringResource(R.string.cancel_button))
                 }
@@ -154,10 +167,7 @@ fun EditSongChorusScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Editar Refrão",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
+                    ScreenTitle("Editar refrão")
                     Text(
                         text = song.title,
                         style = MaterialTheme.typography.bodyMedium,
@@ -189,14 +199,15 @@ fun EditSongChorusScreen(
                         )
                         IconActionButton(
                             onClick = {
-                                songNameDraft = song.title
-                                renameSongFailed = false
-                                showRenameDialog = true
+                                songTitleDraft = song.title
+                                artistDraft = song.artist
+                                songDetailsUpdateFailed = false
+                                showSongDetailsDialog = true
                             }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Edit,
-                                contentDescription = stringResource(R.string.edit_song_name)
+                                contentDescription = stringResource(R.string.edit_song_details)
                             )
                         }
                     }
@@ -213,36 +224,13 @@ fun EditSongChorusScreen(
                 }
             }
 
-            if (playbackState.uri == song.uriString && playbackState.durationMs > 0) {
-                MusicSeekBar(
-                    playbackState = playbackState,
-                    onSeek = viewModel::seekTo
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                PrimaryButton(
-                    onClick = {
-                        if (playbackState.isPlaying && playbackState.uri == song.uriString) {
-                            viewModel.stopPlayback()
-                        } else {
-                            viewModel.play()
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = if (playbackState.isPlaying && playbackState.uri == song.uriString) {
-                            "Parar música"
-                        } else {
-                            "Tocar música inteira"
-                        }
-                    )
-                }
-            }
+            SongPlaybackControls(
+                playbackState = playbackState,
+                songUri = song.uriString,
+                onPlay = { viewModel.play() },
+                onStop = viewModel::stopPlayback,
+                onSeek = viewModel::seekTo,
+            )
 
             PrimaryButton(
                 onClick = { viewModel.newChorus() },

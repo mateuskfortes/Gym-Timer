@@ -220,10 +220,10 @@ class WorkoutRepository(
         songDao.delete(song.toEntity())
     }
 
-    suspend fun renameSong(songId: Long, title: String): Boolean {
+    suspend fun updateSongDetails(songId: Long, title: String, artist: String): Boolean {
         val normalizedTitle = title.trim()
         require(normalizedTitle.isNotEmpty())
-        return songDao.updateTitle(songId, normalizedTitle) == 1
+        return songDao.updateDetails(songId, normalizedTitle, artist.trim()) == 1
     }
 
     fun getChorusesBySongId(songId: Long): Flow<List<ChorusModel>> {
