@@ -15,9 +15,20 @@
 ./gradlew :app:testDevDebugUnitTest
 ./gradlew :app:lintDevDebug
 ./gradlew :app:connectedDevDebugAndroidTest
+./analyze-code.sh
 ```
 
-O último comando requer dispositivo ou emulador conectado. A configuração Gradle atual lê `key.properties` na configuração do módulo; prepare a assinatura local conforme o `README.md` antes dos comandos. `lintDevDebug` é fornecido pelo plugin Android Gradle e grava relatórios em `app/build/reports/lint-results-devDebug.html` e `.txt`. O projeto não usa um formatador automático.
+`connectedDevDebugAndroidTest` requer dispositivo ou emulador conectado. A configuração Gradle atual lê `key.properties` na configuração do módulo; prepare a assinatura local conforme o `README.md` antes dos comandos. `lintDevDebug` é fornecido pelo plugin Android Gradle e grava relatórios em `app/build/reports/lint-results-devDebug.html` e `.txt`. O projeto não usa um formatador automático.
+
+### Analisar complexidade e qualidade Kotlin
+
+Rode o script na raiz do repositório; ele chama `:app:detekt` pelo Gradle Wrapper e não requer dispositivo ou emulador:
+
+```bash
+./analyze-code.sh
+```
+
+Argumentos adicionais são repassados ao Gradle, por exemplo `./analyze-code.sh --console=plain`. O Detekt habilita as regras embutidas com `allRules`; `config/detekt/detekt.yml` desativa convenções de baixo sinal e verificações de formatação/documentação automática, além de excluir `ui/` da complexidade cognitiva por causa do ruído das lambdas do Compose. A complexidade ciclomática segue ativa em todos os pacotes, com limite 10; métodos têm limite de 120 linhas. Os relatórios HTML, XML, Markdown e SARIF ficam em `app/build/reports/detekt/`. Violações fazem o comando falhar e informam o arquivo e a linha.
 
 Para compilar, instalar e abrir o aplicativo, rode `./run-app.sh`. O script usa o único dispositivo autorizado que já estiver conectado por USB ou Wi-Fi; se não houver um, pede o IP e a porta da Depuração sem fio e conecta automaticamente. O IP padrão é `192.168.1.104` quando o campo fica vazio. O pareamento inicial por Wi-Fi continua sendo feito no Android, uma vez. A [seção de conexão no README](../README.md#rodar-no-celular-por-usb-ou-wi-fi) explica o processo e o uso do depurador do Android Studio. Compilar com `assembleDevDebug` sozinho não instala nem inicia o app.
 

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
@@ -113,98 +114,138 @@ fun LocalSongsScreen(
         ) {
             Scaffold(
                 bottomBar = {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        SecondaryButton(
-                            onClick = goBack,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 16.dp, vertical = 12.dp)
-                        ) {
-                            Text("Voltar")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        PrimaryButton (
-                            onClick = {viewModel.saveSelectedSongs(goBack)},
-                            enabled = uiState.selectedSongIds.isNotEmpty() && !uiState.isSaving,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 16.dp, vertical = 12.dp)
-                        ) {
-                            Text(stringResource(if (uiState.isSaving) R.string.saving_selection else R.string.save_selection))
-                        }
-                    }
+                    LocalSongsBottomBar(
+                        isSaving = uiState.isSaving,
+                        hasSelection = uiState.selectedSongIds.isNotEmpty(),
+                        onBack = goBack,
+                        onSave = { viewModel.saveSelectedSongs(goBack) }
+                    )
                 }
             ) { innerPadding ->
-                when {
-                    uiState.isLoading -> {
-                        LoadingScreen(modifier = Modifier.padding(innerPadding))
-                    }
-
-                    uiState.error != null -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(innerPadding),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(uiState.error ?: "Erro")
-                        }
-                    }
-
-                    uiState.songs.isEmpty() -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(innerPadding),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("Nenhuma música encontrada")
-                        }
-                    }
-
-                    else -> {
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier
-                                .nestedScroll(scrollResistance)
-                                .padding(
-                                    PaddingValues(
-                                        start = innerPadding.calculateStartPadding(LayoutDirection.Ltr),
-                                        end = innerPadding.calculateEndPadding(LayoutDirection.Ltr),
-                                        bottom = innerPadding.calculateBottomPadding(),
-                                        top = 0.dp
-                                    )
-                                )
-                                .fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(
-                                items = uiState.songs,
-                                key = { it.id }
-                            ) { song ->
-                                SongCard(
-                                    song = song,
-                                    isPlaying = uiState.playingSongId == song.id,
-                                    selected = song.id in uiState.selectedSongIds,
-                                    onSelectionChange = { viewModel.toggleSongSelection(song.id) },
-                                    onPlayClick = {
-                                        requestAudioPermission { viewModel.playSong(context, song) }
-                                    },
-                                    onStopClick = viewModel::stopPlayer,
-                                    playbackStateFlow = if (uiState.playingSongId == song.id) {
-                                        app.musicPlayerManager.playbackState
-                                    } else null,
-                                    onSeek = viewModel::seekTo,
-                                    artworkRepository = app.container.songArtworkRepository,
-                                    shouldLoadArtwork = !isScrolling,
-                                )
-                            }
-                        }
-
-                    }
-                }
+                LocalSongsContent(
+                    uiState = uiState,
+                    innerPadding = innerPadding,
+                    listState = listState,
+                    scrollResistance = scrollResistance,
+                    isScrolling = isScrolling,
+                    app = app,
+                    context = context,
+                    viewModel = viewModel,
+                    requestAudioPermission = requestAudioPermission
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun LocalSongsBottomBar(
+    isSaving: Boolean,
+    hasSelection: Boolean,
+    onBack: () -> Unit,
+    onSave: () -> Unit
+) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        SecondaryButton(
+            onClick = onBack,
+            modifier = Modifier.weight(1f).padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Text("Voltar")
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        PrimaryButton(
+            onClick = onSave,
+            enabled = hasSelection && !isSaving,
+            modifier = Modifier.weight(1f).padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Text(stringResource(if (isSaving) R.string.saving_selection else R.string.save_selection))
+        }
+    }
+}
+
+@Composable
+private fun LocalSongsContent(
+    uiState: LocalSongsUiState,
+    innerPadding: PaddingValues,
+    listState: LazyListState,
+    scrollResistance: ScrollResistanceConnection,
+    isScrolling: Boolean,
+    app: GymApplication,
+    context: android.content.Context,
+    viewModel: LocalSongsViewModel,
+    requestAudioPermission: (() -> Unit) -> Unit
+) {
+    when {
+        uiState.isLoading -> LoadingScreen(modifier = Modifier.padding(innerPadding))
+        uiState.error != null -> LocalSongsMessage(uiState.error ?: "Erro", innerPadding)
+        uiState.songs.isEmpty() -> LocalSongsMessage("Nenhuma música encontrada", innerPadding)
+        else -> LocalSongsList(
+            uiState = uiState,
+            innerPadding = innerPadding,
+            listState = listState,
+            scrollResistance = scrollResistance,
+            isScrolling = isScrolling,
+            app = app,
+            context = context,
+            viewModel = viewModel,
+            requestAudioPermission = requestAudioPermission
+        )
+    }
+}
+
+@Composable
+private fun LocalSongsMessage(message: String, innerPadding: PaddingValues) {
+    Box(
+        modifier = Modifier.fillMaxSize().padding(innerPadding),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(message)
+    }
+}
+
+@Composable
+private fun LocalSongsList(
+    uiState: LocalSongsUiState,
+    innerPadding: PaddingValues,
+    listState: LazyListState,
+    scrollResistance: ScrollResistanceConnection,
+    isScrolling: Boolean,
+    app: GymApplication,
+    context: android.content.Context,
+    viewModel: LocalSongsViewModel,
+    requestAudioPermission: (() -> Unit) -> Unit
+) {
+    LazyColumn(
+        state = listState,
+        modifier = Modifier
+            .nestedScroll(scrollResistance)
+            .padding(
+                PaddingValues(
+                    start = innerPadding.calculateStartPadding(LayoutDirection.Ltr),
+                    end = innerPadding.calculateEndPadding(LayoutDirection.Ltr),
+                    bottom = innerPadding.calculateBottomPadding(),
+                    top = 0.dp
+                )
+            )
+            .fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(items = uiState.songs, key = { it.id }) { song ->
+            SongCard(
+                song = song,
+                isPlaying = uiState.playingSongId == song.id,
+                selected = song.id in uiState.selectedSongIds,
+                onSelectionChange = { viewModel.toggleSongSelection(song.id) },
+                onPlayClick = { requestAudioPermission { viewModel.playSong(context, song) } },
+                onStopClick = viewModel::stopPlayer,
+                playbackStateFlow = if (uiState.playingSongId == song.id) {
+                    app.musicPlayerManager.playbackState
+                } else null,
+                onSeek = viewModel::seekTo,
+                artworkRepository = app.container.songArtworkRepository,
+                shouldLoadArtwork = !isScrolling
+            )
         }
     }
 }

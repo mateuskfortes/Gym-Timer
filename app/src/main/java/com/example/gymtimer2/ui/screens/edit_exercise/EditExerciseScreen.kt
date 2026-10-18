@@ -159,26 +159,22 @@ fun EditExerciseScreen(
             addEnabled = chorusesLoaded
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            SecondaryButton(
-                onClick = { viewModel.discardChanges(goBack) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(stringResource(R.string.cancel_button))
-            }
+        EditExerciseActions(
+            enabled = chorusesLoaded,
+            onCancel = { viewModel.discardChanges(goBack) },
+            onSave = { viewModel.updateExercise(goBack) }
+        )
+    }
+}
 
-            PrimaryButton(
-                onClick = {
-                    viewModel.updateExercise(goBack)
-                },
-                modifier = Modifier.weight(1f),
-                enabled = chorusesLoaded
-            ) {
-                Text(stringResource(R.string.save_button))
-            }
+@Composable
+private fun EditExerciseActions(enabled: Boolean, onCancel: () -> Unit, onSave: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        SecondaryButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.cancel_button))
+        }
+        PrimaryButton(onClick = onSave, modifier = Modifier.weight(1f), enabled = enabled) {
+            Text(stringResource(R.string.save_button))
         }
     }
 }

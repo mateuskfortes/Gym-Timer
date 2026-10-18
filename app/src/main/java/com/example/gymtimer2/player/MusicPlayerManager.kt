@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+private const val PLAYBACK_PROGRESS_INTERVAL_MS = 250L
+
 class MusicPlayerManager(
     private val context: Context
 ) {
@@ -261,29 +263,33 @@ class MusicPlayerManager(
         progressJob?.cancel()
         progressJob = scope.launch {
             while (isActive) {
-                val player = mediaPlayer ?: break
-                val progress = runCatching {
-                    Triple(player.currentPosition, player.duration, player.isPlaying)
-                }.getOrNull()
-                if (progress == null) {
-                    stopInternal()
-                    break
-                }
-                val endAtMs = previewEndAtMs
-                if (endAtMs != null && progress.first >= endAtMs) {
-                    stopInternal()
-                    break
-                }
-                updatePlaybackState(
-                    uri = uri.toString(),
-                    currentPositionMs = progress.first,
-                    durationMs = progress.second,
-                    isPlaying = progress.third
-                )
-                delay(250)
+                if (!updatePlaybackProgress(uri)) return@launch
+                delay(PLAYBACK_PROGRESS_INTERVAL_MS)
             }
         }
     }
+
+    private fun updatePlaybackProgress(uri: Uri): Boolean {
+        val player = mediaPlayer ?: return false
+        val progress = runCatching {
+            Triple(player.currentPosition, player.duration, player.isPlaying)
+        }.getOrNull()
+        if (progress == null || isPreviewFinished(progress.first)) {
+            stopInternal()
+            return false
+        }
+
+        updatePlaybackState(
+            uri = uri.toString(),
+            currentPositionMs = progress.first,
+            durationMs = progress.second,
+            isPlaying = progress.third
+        )
+        return true
+    }
+
+    private fun isPreviewFinished(positionMs: Int): Boolean =
+        previewEndAtMs?.let { positionMs >= it } ?: false
 
     private fun stopInternal() {
         progressJob?.cancel()

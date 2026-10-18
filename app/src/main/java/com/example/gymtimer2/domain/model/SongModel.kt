@@ -1,7 +1,5 @@
 package com.example.gymtimer2.domain.model
 
-import java.io.Serializable
-
 data class SongModel(
     val id: Long,
     val title: String,
@@ -9,4 +7,4 @@ data class SongModel(
     val uriString: String,
     val durationMs: Long? = null,
     val albumId: Long? = null
-): Serializable
+)

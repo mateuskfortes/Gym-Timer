@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.detekt)
     id("kotlin-parcelize")
     id("com.google.devtools.ksp")
     id("androidx.room")
@@ -138,4 +139,10 @@ dependencies {
 
 room {
     schemaDirectory("$projectDir/schemas")
+}
+
+detekt {
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    allRules = true
 }
