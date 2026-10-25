@@ -18,3 +18,6 @@ local.properties
 *.jks
 *.keystore
 key.properties
+
+# Cache dos testes do script de instalação.
+/tests/__pycache__/

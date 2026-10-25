@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.gymtimer2.data.database.WorkoutDatabase
 import com.example.gymtimer2.data.preferences.AppSettingsRepository
 import com.example.gymtimer2.data.repository.SongArtworkRepository
+import com.example.gymtimer2.data.repository.RunRepository
 import com.example.gymtimer2.data.repository.WorkoutRepository
 
 class AppContainer(context: Context) {
@@ -19,6 +20,10 @@ class AppContainer(context: Context) {
     private val exerciseChorusDao = database.exerciseChorusDao()
     private val workoutDayDao = database.workoutDayDao()
     private val exerciseScheduleDao = database.exerciseScheduleDao()
+    private val runDao = database.runDao()
+
+    /** Repositório local usado pela aba Corridas e pelo serviço GPS. */
+    val runRepository = RunRepository(runDao)
 
     val workoutRepository = WorkoutRepository(
         context = context.applicationContext,

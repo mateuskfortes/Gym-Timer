@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.R
-import com.example.gymtimer2.ui.components.ScreenTitle
 import com.example.gymtimer2.ui.components.music.MusicDestinationCard
 
 private data class MusicHomeCategory(
@@ -41,13 +40,9 @@ fun MusicHomeScreen(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 24.dp),
+        contentPadding = PaddingValues(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item(key = "music_home_title") {
-            ScreenTitle(text = stringResource(R.string.nav_music))
-        }
-
         items(
             items = categories,
             key = { it.id }

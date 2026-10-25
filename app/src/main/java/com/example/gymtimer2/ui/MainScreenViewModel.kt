@@ -11,6 +11,7 @@ sealed class MainScreenDestination {
     data object Exercises : MainScreenDestination()
     data object AddExercise : MainScreenDestination()
     data object MusicHome : MainScreenDestination()
+    data object Runs : MainScreenDestination()
     data object SavedSongs : MainScreenDestination()
     data object Settings : MainScreenDestination()
     data object LocalSongs : MainScreenDestination()

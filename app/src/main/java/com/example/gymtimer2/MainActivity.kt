@@ -15,10 +15,14 @@ import com.example.gymtimer2.timer_overlay_service.requestOverlayPermission
 import com.example.gymtimer2.timer_overlay_service.startOverlay
 import com.example.gymtimer2.ui.theme.GymTimerTheme
 import com.example.gymtimer2.ui.screens.settings.SettingsViewModel
+import com.example.gymtimer2.ui.screens.runs.RunViewModel
+import com.example.gymtimer2.ui.screens.runs.tracking.RunTrackingServiceController
 
+/** Monta a interface principal e compartilha as dependências da gravação GPS. */
 class MainActivity : ComponentActivity() {
     private var pendingExerciseId: Int? = null
 
+    /** Cria ViewModels com os repositórios do container e observa seu estado. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pendingExerciseId = savedInstanceState?.getInt("pending_exercise_id")?.takeIf { it > 0 }
@@ -30,6 +34,14 @@ class MainActivity : ComponentActivity() {
                 factory = SettingsViewModel.factory((application as GymApplication).container.appSettingsRepository)
             )
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+            val container = (application as GymApplication).container
+            val runViewModel: RunViewModel = viewModel(
+                factory = RunViewModel.factory(
+                    container.runRepository,
+                    RunTrackingServiceController(this)
+                )
+            )
+            val runState by runViewModel.uiState.collectAsStateWithLifecycle()
             val darkTheme = settings.themeMode == ThemeMode.DARK
             SideEffect {
                 WindowCompat.getInsetsController(window, window.decorView).apply {
@@ -42,6 +54,17 @@ class MainActivity : ComponentActivity() {
                     settings = settings,
                     onThemeSelected = settingsViewModel::selectTheme,
                     onAccentSelected = settingsViewModel::selectAccent,
+                    runState = runState,
+                    onStartRun = runViewModel::startRun,
+                    onPauseRun = runViewModel::pauseRun,
+                    onResumeRun = runViewModel::resumeRun,
+                    onFinishRun = runViewModel::finishRun,
+                    onDiscardRun = runViewModel::discardRun,
+                    onSelectRun = runViewModel::selectRun,
+                    onDeleteRun = runViewModel::deleteCompletedRun,
+                    onBackFromRunDetails = runViewModel::clearSelectedRun,
+                    onOpenActiveRun = runViewModel::openActiveRun,
+                    onCloseActiveRun = runViewModel::closeActiveRun,
                     onOpenOverlayClick = {exerciseId: Int ->
                         if (canDrawOverlays(this)) {
                             startOverlay(this, exerciseId)

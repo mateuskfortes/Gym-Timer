@@ -8,12 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,11 +31,9 @@ import com.example.gymtimer2.domain.model.ScheduledExerciseModel
 import com.example.gymtimer2.domain.model.WorkoutDayModel
 import com.example.gymtimer2.domain.model.WorkoutScheduleError
 import com.example.gymtimer2.ui.components.AppTextField
-import com.example.gymtimer2.ui.components.IconActionButton
 import com.example.gymtimer2.ui.components.LoadingScreen
 import com.example.gymtimer2.ui.components.PrimaryButton
 import com.example.gymtimer2.ui.components.ReorderableExerciseList
-import com.example.gymtimer2.ui.components.ScreenTitle
 import com.example.gymtimer2.ui.components.SecondaryButton
 import com.example.gymtimer2.ui.components.WorkoutDaySelector
 import com.example.gymtimer2.ui.components.deleteExerciseDialog
@@ -94,16 +87,16 @@ fun ExerciseListScreen(
         onDismissDelete = { showDeleteDialog = false }
     )
 
-    Column(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        WorkoutDaysHeader(
+    Column(modifier = modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, end = 16.dp)) {
+        WorkoutDayControls(
             selectedDay = selectedDay,
             days = days,
             dayExercises = dayExercises,
+            onSelectDay = onSelectDay,
             onCreate = { viewModel.clearError(); showCreateDialog = true },
             onRename = { viewModel.clearError(); showRenameDialog = true },
             onDelete = { viewModel.clearError(); showDeleteDialog = true }
         )
-        WorkoutDaySelector(days, selectedDayId, onSelectDay)
         WorkoutScheduleErrorMessage(error)
         selectedDay?.let { day ->
             SelectedDayExercises(
@@ -120,31 +113,26 @@ fun ExerciseListScreen(
 }
 
 @Composable
-private fun WorkoutDaysHeader(
+private fun WorkoutDayControls(
     selectedDay: WorkoutDayModel?,
     days: List<WorkoutDayModel>,
     dayExercises: DayExercisesUiState,
+    onSelectDay: (Long) -> Unit,
     onCreate: () -> Unit,
     onRename: () -> Unit,
     onDelete: () -> Unit
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        ScreenTitle(
-            text = stringResource(R.string.workout_days_title),
-            modifier = Modifier.weight(1f)
+        Box(Modifier.weight(1f)) {
+            WorkoutDaySelector(days, selectedDay?.id, onSelectDay)
+        }
+        WorkoutDayMenu(
+            canRename = selectedDay != null,
+            canDelete = canDeleteSelectedDay(selectedDay, days, dayExercises),
+            onCreate = onCreate,
+            onRename = onRename,
+            onDelete = onDelete
         )
-        IconActionButton(onClick = onCreate) {
-            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_day))
-        }
-        IconActionButton(onClick = onRename, enabled = selectedDay != null) {
-            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.rename_day))
-        }
-        IconActionButton(
-            onClick = onDelete,
-            enabled = canDeleteSelectedDay(selectedDay, days, dayExercises)
-        ) {
-            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_day))
-        }
     }
 }
 

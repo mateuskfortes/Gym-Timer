@@ -32,7 +32,6 @@ import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.WeightUnit
 import com.example.gymtimer2.ui.components.WeightUnitChip
 import com.example.gymtimer2.ui.components.WorkoutDaySelector
-import com.example.gymtimer2.ui.components.ScreenTitle
 import com.example.gymtimer2.ui.components.PrimaryButton
 import com.example.gymtimer2.ui.components.LabeledOutlinedTextField
 import com.example.gymtimer2.ui.components.FormFieldLabel
@@ -98,8 +97,6 @@ fun AddExerciseScreen(
                 .padding(top = 16.dp, bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ScreenTitle(stringResource(R.string.add_exercise_title))
-
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 FormFieldLabel(stringResource(R.string.workout_day_label))
                 WorkoutDaySelector(days, viewModel.selectedDayId, viewModel::selectDay)

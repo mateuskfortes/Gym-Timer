@@ -6,10 +6,11 @@ Aplicativo Android para cadastrar exercícios, definir descanso e associar trech
 
 - Cadastro e edição de exercícios com carga, unidade (`kg` ou posições da máquina), tempo de descanso e antecipação do trecho musical.
 - Seleção de músicas do dispositivo, edição do nome salvo no app, cadastro de trechos e associação de trechos aos exercícios.
-- Dias de treino com nome editável. Cada exercício pertence a um dia; arraste a alça do cartão para definir a ordem. É possível mudar o dia de um exercício na tela de edição.
+- Dias de treino com nome editável. Use o menu de três linhas ao lado do seletor para criar, renomear ou excluir dias. Cada exercício pertence a um dia; arraste a alça do cartão para definir a ordem. É possível mudar o dia de um exercício na tela de edição.
 - Timer flutuante arrastável: toque para iniciar e encerrar uma série. Ao encerrar, um painel permite atualizar a carga (opcional), manter o exercício ou avançar para o próximo da ordem. A escolha inicia o descanso correspondente. Durante a contagem do descanso, o fundo fica com 30% de opacidade e a janela compacta mostra só os números. Arraste o timer até a área de remoção para fechá-lo.
 - Reprodução de um trecho associado ao iniciar a série, quando há permissão de áudio.
 - Aba **Ajustes** à direita da navegação: escolha tema claro ou escuro e uma das 12 cores de destaque. A escolha é salva no dispositivo e aplicada às telas e ao timer flutuante, inclusive se ele já estiver aberto.
+- Aba **Corridas**: consulte o histórico local e abra a sessão ativa numa tela exclusiva, com mapa em tela cheia. O painel inferior mostra tempo ativo, distância, pace e controles; arraste ou toque na seta para recolher e expandir. Voltar ao histórico mantém a gravação. O zoom e a navegação manual são preservados; quando a posição sai do centro, um botão permite centralizar novamente e restaurar o zoom de acompanhamento. O histórico destaca a sessão aberta, com estado, métricas e atalho para voltar à corrida. Ao finalizar, salve com um título opcional ou descarte a sessão após confirmar a exclusão do percurso. O título aparece no histórico e no detalhe; sessões sem título usam a data. Corridas concluídas podem ser excluídas com confirmação, junto com seus pontos do percurso. Durante a gravação ou pausa, uma notificação permite voltar ao app; se o Android bloquear o canal ou a permissão, o histórico mostra um atalho para ativar as notificações. O histórico e os pontos do percurso ficam no banco local.
 
 ## Requisitos
 
@@ -50,7 +51,7 @@ Na raiz do repositório, execute o script:
 
 O script executa `:app:detekt` pelo Gradle Wrapper; não precisa de emulador. Para passar opções ao Gradle, acrescente-as ao comando, por exemplo `./analyze-code.sh --console=plain`. O Detekt habilita as regras embutidas com `allRules`; `config/detekt/detekt.yml` desativa convenções de baixo sinal e verificações de formatação/documentação automática. A complexidade cognitiva fica excluída de `ui/`, onde as lambdas do Compose geravam ruído. A complexidade ciclomática continua ativa em todo o Kotlin, com limite 10 por método; métodos têm limite de 120 linhas. Os relatórios HTML, XML, Markdown e SARIF são gravados em `app/build/reports/detekt/`. Se houver violações, o comando termina com erro e mostra arquivo e linha para orientar a correção.
 
-Na primeira abertura após atualizar uma instalação antiga, todos os exercícios existentes aparecem em **Dia 1**, na ordem dos IDs. Para criar ou renomear dias, use os botões ao lado de **Dias de treino**. Só é possível excluir um dia vazio, e deve restar ao menos um dia.
+Na primeira abertura após atualizar uma instalação antiga, todos os exercícios existentes aparecem em **Dia 1**, na ordem dos IDs. Para criar ou renomear dias, abra o menu **Gerenciar dias de treino**, ao lado do seletor. Só é possível excluir um dia vazio, e deve restar ao menos um dia.
 
 ## Rodar no celular por USB ou Wi-Fi
 
@@ -60,7 +61,7 @@ Rode **na raiz do projeto**:
 ./run-app.sh
 ```
 
-Se já houver um único dispositivo autorizado por USB ou Wi-Fi, o script compila a variante `devDebug`, instala o APK e abre o app. Se não houver dispositivo conectado, ele pede o IP e a porta de conexão da **Depuração sem fio** e executa `adb connect` automaticamente. O IP padrão é `192.168.1.104` quando o campo fica vazio. O pareamento inicial do Android 11+ ainda precisa ser feito uma vez, conforme os passos abaixo. O antigo `./run-usb.sh` continua funcionando como atalho. Para usar breakpoints, selecione o celular e clique em **Debug** no Android Studio; o script executa o app sem anexar o depurador.
+Se já houver um único dispositivo autorizado por USB ou Wi-Fi, o script compila a variante `devDebug`, instala o APK e abre o app. Se não houver dispositivo conectado, ele tenta descobrir o endereço atual da **Depuração sem fio** por mDNS. Com um único endereço disponível, conecta automaticamente. Sem descoberta ou com vários celulares, pede o IP e a porta; também aceita colar `IP:porta` no primeiro campo. Se a conexão falhar, consulta novamente a porta anunciada pelo mesmo IP e permite tentar de novo sem reiniciar o script. O IP padrão é `192.168.1.104` quando o campo fica vazio. O pareamento inicial do Android 11+ ainda precisa ser feito uma vez, conforme os passos abaixo. O antigo `./run-usb.sh` continua funcionando como atalho. Para usar breakpoints, selecione o celular e clique em **Debug** no Android Studio; o script executa o app sem anexar o depurador.
 
 ### Primeira conexão por USB
 
@@ -83,7 +84,7 @@ Se já houver um único dispositivo autorizado por USB ou Wi-Fi, o script compil
    ~/Android/Sdk/platform-tools/adb pair IP:PORTA_DE_PAREAMENTO
    ```
 
-3. Volte à tela principal de **Depuração sem fio**. Rode `./run-app.sh` e informe o **Endereço IP** e a **porta** exibidos nessa tela. Essa porta costuma ser diferente da porta de pareamento. Se o IP for `192.168.1.104`, basta pressionar Enter no primeiro prompt para usar o padrão:
+3. Volte à tela principal de **Depuração sem fio**. Rode `./run-app.sh`. Se a descoberta automática não conectar, informe o **Endereço IP** e a **porta** exibidos nessa tela, separados ou como `IP:porta`. Essa porta costuma ser diferente da porta de pareamento. Se o IP for `192.168.1.104`, basta pressionar Enter no primeiro prompt para usar o padrão:
 
    ```bash
    ./run-app.sh
@@ -91,7 +92,7 @@ Se já houver um único dispositivo autorizado por USB ou Wi-Fi, o script compil
 
 4. O script conecta, compila, instala e abre o app. O pareamento precisa ser feito apenas uma vez, salvo se for revogado no celular.
 
-Se `adb pair` ou `adb connect` falhar, confira o IP e a porta **atuais** no celular: eles podem mudar. `~/Android/Sdk/platform-tools/adb mdns services` mostra os serviços `_adb-tls-pairing._tcp` e `_adb-tls-connect._tcp` encontrados na rede. Veja o [guia oficial do ADB](https://developer.android.com/tools/adb#connect-to-a-device-over-wi-fi).
+Se `adb pair` ou `adb connect` falhar, confira o IP e a porta **atuais** no celular: eles podem mudar. `Connection refused` significa que o endereço recusou a conexão TCP; a recusa pode ocorrer mesmo quando o valor foi digitado corretamente. Nesse caso, desative e ative a Depuração sem fio, confira o endereço mostrado novamente e repita no próprio script. O script aguarda a autorização do transporte antes de compilar ou instalar, inclusive quando o ADB retorna sucesso no comando mas não conecta de fato. `~/Android/Sdk/platform-tools/adb mdns services` mostra os serviços `_adb-tls-pairing._tcp` e `_adb-tls-connect._tcp` encontrados na rede. Veja o [guia oficial do ADB](https://developer.android.com/tools/adb#connect-to-a-device-over-wi-fi).
 
 Para depurar com breakpoints, abra este projeto no Android Studio, aguarde a sincronização do Gradle, escolha **`devDebug`** em **Build Variants**, selecione o celular e a configuração **`app`**, e clique em **Debug** (ícone de inseto).
 
@@ -102,6 +103,7 @@ Se o dispositivo não aparecer, teste outro cabo ou porta USB e use **Tools > Tr
 - **Áudio local:** `READ_MEDIA_AUDIO` no Android 13+ ou `READ_EXTERNAL_STORAGE` até Android 12L. Necessária para listar e reproduzir músicas do dispositivo. A biblioteca e a seleção mostram **Permitir** quando falta acesso; tocar em uma música ou refrão abre o pedido de permissão do Android. Se o acesso for negado, a reprodução não começa.
 - **Sobreposição:** `SYSTEM_ALERT_WINDOW`. O app encaminha às configurações ao abrir o timer sem essa permissão.
 - **Serviço em primeiro plano:** o timer flutuante é executado por `OverlayService` com uma notificação persistente.
+- **Localização:** a aba Corridas pede localização precisa e inicia `RunTrackingService` enquanto o app está visível. O serviço mantém o GPS ativo com a tela bloqueada. A notificação de corrida depende da permissão de notificações no Android 13 ou superior. O mapa usa blocos online do OpenStreetMap e requer internet; os dados da corrida continuam salvos localmente.
 
 ## Documentação
 
