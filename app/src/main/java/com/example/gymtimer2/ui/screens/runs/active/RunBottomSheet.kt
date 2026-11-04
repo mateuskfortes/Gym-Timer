@@ -1,6 +1,7 @@
 package com.example.gymtimer2.ui.screens.runs.active
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -8,8 +9,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.Text
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.gymtimer2.domain.model.RunModel
@@ -23,7 +27,6 @@ import com.example.gymtimer2.ui.screens.runs.RunPlannedRouteGuidanceState
 import com.example.gymtimer2.ui.screens.runs.RunStreetReturnState
 import com.example.gymtimer2.domain.model.RunTurnGuidance
 import com.example.gymtimer2.ui.components.SecondaryButton
-import androidx.compose.material3.Text
 import com.example.gymtimer2.R
 import com.example.gymtimer2.ui.screens.runs.components.RunSplitsSection
 import com.example.gymtimer2.ui.screens.runs.components.RunLapsSection
@@ -130,11 +133,17 @@ internal fun RunBottomSheet(
                 )
                 Spacer(Modifier.height(8.dp))
             }
-            RunControls(run.status, onPause, onResume, onFinish)
-            RunLapAction(run.status, onLap)
             RunLapsSection(laps)
             splitsUiState?.let { RunSplitsSection(it) }
             Spacer(Modifier.height(24.dp))
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            RunControls(run.status, onPause, onResume, onFinish)
+            RunLapAction(run.status, onLap)
         }
     }
 }
@@ -175,7 +184,6 @@ private fun RunRouteGuidance(
 @Composable
 private fun RunLapAction(status: RunStatus, onLap: (() -> Unit)?) {
     if (status != RunStatus.RUNNING || onLap == null) return
-    Spacer(Modifier.height(8.dp))
     SecondaryButton(onClick = onLap, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.run_lap_action))
     }

@@ -6,10 +6,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.filled.Route
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -66,40 +68,56 @@ internal fun RunPreparationPanel(
         tonalElevation = 6.dp
     ) {
         Column(
-            modifier = Modifier.navigationBarsPadding().padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier.navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(
                 Modifier.size(width = 36.dp, height = 4.dp)
                     .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), CircleShape)
             )
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 18.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                        RoundedCornerShape(12.dp)
-                    ).padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+            Column(
+                modifier = Modifier.weight(1f, fill = false)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(
-                    Icons.Default.GpsFixed,
-                    contentDescription = null,
-                    tint = if (gpsStatus == RunGpsStatus.GOOD) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.error
-                )
-                RunGpsIndicator(
-                    status = gpsStatus,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surfaceVariant
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.GpsFixed,
+                            contentDescription = null,
+                            tint = if (gpsStatus == RunGpsStatus.GOOD) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.error
+                        )
+                        RunGpsIndicator(
+                            status = gpsStatus,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+                RunWorkoutSelector(workoutTitle, onEditWorkout)
+                RunPreparationMetrics()
+                RunPreparationPaceTarget(paceTarget, onEditPaceTarget)
+                RunManualLapsSetting(manualLapsEnabled, onManualLapsChanged)
+                selectedRouteTitle?.let {
+                    Text(
+                        stringResource(R.string.run_route_selected, it),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
             }
-            RunWorkoutSelector(workoutTitle, onEditWorkout)
-            RunPreparationMetrics()
-            RunPreparationPaceTarget(paceTarget, onEditPaceTarget)
-            Spacer(Modifier.height(4.dp))
-            RunManualLapsSetting(manualLapsEnabled, onManualLapsChanged)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RunActivityTypeSelector(
@@ -109,7 +127,7 @@ internal fun RunPreparationPanel(
                 )
                 Button(
                     onClick = onStart,
-                    modifier = Modifier.size(104.dp).semantics {
+                    modifier = Modifier.size(88.dp).semantics {
                         contentDescription = startDescription
                     },
                     shape = CircleShape,
@@ -117,7 +135,7 @@ internal fun RunPreparationPanel(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(36.dp))
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(32.dp))
                         Text(stringResource(R.string.run_preparation_start), fontWeight = FontWeight.Bold)
                     }
                 }
@@ -131,15 +149,6 @@ internal fun RunPreparationPanel(
                     }
                 }
             }
-            selectedRouteTitle?.let {
-                Text(
-                    stringResource(R.string.run_route_selected, it),
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
-            }
         }
     }
 }
@@ -147,7 +156,7 @@ internal fun RunPreparationPanel(
 @Composable
 private fun RunPreparationMetrics() {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         RunPreparationMetric(
@@ -171,7 +180,7 @@ private fun RunPreparationMetrics() {
 @Composable
 private fun RunPreparationPaceTarget(target: RunPaceTarget?, onEdit: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

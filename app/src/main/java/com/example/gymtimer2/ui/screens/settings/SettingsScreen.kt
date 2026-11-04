@@ -1,11 +1,13 @@
 package com.example.gymtimer2.ui.screens.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -88,87 +91,113 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
-            .padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 24.dp)
+            .padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        SettingsAppearance(settings, onThemeSelected, onAccentSelected)
-        Spacer(Modifier.height(20.dp))
-        RunDistanceUnitSetting(settings.runDistanceUnit, onRunDistanceUnitChanged)
-        RunTemperatureUnitSetting(settings.runTemperatureUnit, onRunTemperatureUnitChanged)
-        RunStartEndHideDistanceSetting(
-            selectedDistance = settings.runStartEndHideDistance,
-            distanceUnit = settings.runDistanceUnit,
-            onDistanceSelected = onRunStartEndHideDistanceChanged
-        )
-        RunPrivacyZonesSetting(
-            zones = runPrivacyZones,
-            distanceUnit = settings.runDistanceUnit,
-            onSave = onSaveRunPrivacyZone,
-            onDelete = onDeleteRunPrivacyZone
-        )
-        RunManualLapsSetting(settings.runManualLapsEnabled, onRunManualLapsChanged,
-            description = stringResource(R.string.run_manual_laps_description))
-        RunSwitchSetting(
-            title = stringResource(R.string.run_step_rate_sensor_setting),
-            description = stringResource(R.string.run_step_rate_sensor_description),
-            checked = settings.runStepRateSensorEnabled,
-            onCheckedChange = onRunStepRateSensorChanged
-        )
-        RunSwitchSetting(
-            title = stringResource(R.string.run_live_segments_setting),
-            description = stringResource(R.string.run_live_segments_description),
-            checked = settings.runLiveSegmentsEnabled,
-            onCheckedChange = onRunLiveSegmentsChanged,
-            enabled = isRunLiveSegmentsEditable
-        )
-        RunBodyMassSetting(settings.runBodyMassKg, onRunBodyMassKgChanged)
-        RunSwitchSetting(
-            title = stringResource(R.string.run_weather_setting),
-            description = stringResource(R.string.run_weather_setting_description),
-            checked = settings.runWeatherEnabled,
-            onCheckedChange = onRunWeatherChanged
-        )
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            val alertLabel = stringResource(R.string.run_off_route_alerts_setting)
-            Text(alertLabel, modifier = Modifier.weight(1f))
-            Switch(
-                checked = settings.runOffRouteAlertsEnabled,
-                onCheckedChange = onRunOffRouteAlertsChanged,
-                modifier = Modifier.semantics { contentDescription = alertLabel }
+        SettingsSection(title = stringResource(R.string.settings_appearance)) {
+            SettingsAppearance(settings, onThemeSelected, onAccentSelected)
+        }
+        SettingsSection(title = stringResource(R.string.settings_run_units_section)) {
+            RunDistanceUnitSetting(settings.runDistanceUnit, onRunDistanceUnitChanged)
+            RunTemperatureUnitSetting(settings.runTemperatureUnit, onRunTemperatureUnitChanged)
+        }
+        SettingsSection(title = stringResource(R.string.settings_run_privacy_section)) {
+            RunStartEndHideDistanceSetting(
+                selectedDistance = settings.runStartEndHideDistance,
+                distanceUnit = settings.runDistanceUnit,
+                onDistanceSelected = onRunStartEndHideDistanceChanged
+            )
+            RunPrivacyZonesSetting(
+                zones = runPrivacyZones,
+                distanceUnit = settings.runDistanceUnit,
+                onSave = onSaveRunPrivacyZone,
+                onDelete = onDeleteRunPrivacyZone
             )
         }
-        Text(
-            stringResource(R.string.run_off_route_alerts_description),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        RunSwitchSetting(
-            title = stringResource(R.string.run_off_route_notifications_setting),
-            description = stringResource(R.string.run_off_route_notifications_description),
-            checked = settings.runOffRouteNotificationsEnabled,
-            onCheckedChange = onRunOffRouteNotificationsChanged,
-            enabled = settings.runOffRouteAlertsEnabled
-        )
-        RunSwitchSetting(
-            title = stringResource(R.string.run_turn_display_all_cues_setting),
-            description = stringResource(R.string.run_turn_display_all_cues_description),
-            checked = settings.runDisplayAllTurnCues,
-            onCheckedChange = onRunDisplayAllTurnCuesChanged
-        )
-        RunTurnCueCountSetting(
-            count = settings.runUpcomingTurnCueCount,
-            enabled = !settings.runDisplayAllTurnCues,
-            onCountChanged = onRunUpcomingTurnCueCountChanged
-        )
-        RunDeviceSettings(
-            autoPauseEnabled = settings.runAutoPause,
-            onAutoPauseChanged = onRunAutoPauseChanged,
-            keepScreenAwake = settings.runKeepScreenAwake,
-            onKeepScreenAwakeChanged = onRunKeepScreenAwakeChanged,
-            screenDimTimeoutMs = settings.runScreenDimTimeoutMs,
-            onScreenDimTimeoutChanged = onRunScreenDimTimeoutChanged,
-            lockScreenControls = settings.runShowControlsOnLockScreen,
-            onLockScreenControlsChanged = onRunLockScreenControlsChanged
-        )
+        SettingsSection(title = stringResource(R.string.settings_run_metrics_section)) {
+            RunManualLapsSetting(
+                settings.runManualLapsEnabled,
+                onRunManualLapsChanged,
+                description = stringResource(R.string.run_manual_laps_description)
+            )
+            RunSwitchSetting(
+                title = stringResource(R.string.run_step_rate_sensor_setting),
+                description = stringResource(R.string.run_step_rate_sensor_description),
+                checked = settings.runStepRateSensorEnabled,
+                onCheckedChange = onRunStepRateSensorChanged
+            )
+            RunSwitchSetting(
+                title = stringResource(R.string.run_live_segments_setting),
+                description = stringResource(R.string.run_live_segments_description),
+                checked = settings.runLiveSegmentsEnabled,
+                onCheckedChange = onRunLiveSegmentsChanged,
+                enabled = isRunLiveSegmentsEditable
+            )
+            RunBodyMassSetting(settings.runBodyMassKg, onRunBodyMassKgChanged)
+            RunSwitchSetting(
+                title = stringResource(R.string.run_weather_setting),
+                description = stringResource(R.string.run_weather_setting_description),
+                checked = settings.runWeatherEnabled,
+                onCheckedChange = onRunWeatherChanged
+            )
+        }
+        SettingsSection(title = stringResource(R.string.settings_run_guidance_section)) {
+            val alertLabel = stringResource(R.string.run_off_route_alerts_setting)
+            RunSwitchSetting(
+                title = alertLabel,
+                description = stringResource(R.string.run_off_route_alerts_description),
+                checked = settings.runOffRouteAlertsEnabled,
+                onCheckedChange = onRunOffRouteAlertsChanged
+            )
+            RunSwitchSetting(
+                title = stringResource(R.string.run_off_route_notifications_setting),
+                description = stringResource(R.string.run_off_route_notifications_description),
+                checked = settings.runOffRouteNotificationsEnabled,
+                onCheckedChange = onRunOffRouteNotificationsChanged,
+                enabled = settings.runOffRouteAlertsEnabled
+            )
+            RunSwitchSetting(
+                title = stringResource(R.string.run_turn_display_all_cues_setting),
+                description = stringResource(R.string.run_turn_display_all_cues_description),
+                checked = settings.runDisplayAllTurnCues,
+                onCheckedChange = onRunDisplayAllTurnCuesChanged
+            )
+            RunTurnCueCountSetting(
+                count = settings.runUpcomingTurnCueCount,
+                enabled = !settings.runDisplayAllTurnCues,
+                onCountChanged = onRunUpcomingTurnCueCountChanged
+            )
+        }
+        SettingsSection(title = stringResource(R.string.settings_run_device_section)) {
+            RunDeviceSettings(
+                autoPauseEnabled = settings.runAutoPause,
+                onAutoPauseChanged = onRunAutoPauseChanged,
+                keepScreenAwake = settings.runKeepScreenAwake,
+                onKeepScreenAwakeChanged = onRunKeepScreenAwakeChanged,
+                screenDimTimeoutMs = settings.runScreenDimTimeoutMs,
+                onScreenDimTimeoutChanged = onRunScreenDimTimeoutChanged,
+                lockScreenControls = settings.runShowControlsOnLockScreen,
+                onLockScreenControlsChanged = onRunLockScreenControlsChanged
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            content()
+        }
     }
 }
 
@@ -178,8 +207,6 @@ private fun SettingsAppearance(
     onThemeSelected: (ThemeMode) -> Unit,
     onAccentSelected: (AccentColor) -> Unit
 ) {
-    Text(stringResource(R.string.settings_appearance), style = MaterialTheme.typography.titleMedium)
-    Spacer(Modifier.height(12.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         ThemeOption(
             title = stringResource(R.string.settings_light_theme),
@@ -196,8 +223,8 @@ private fun SettingsAppearance(
             modifier = Modifier.weight(1f)
         )
     }
-    Spacer(Modifier.height(28.dp))
-    Text(stringResource(R.string.settings_accent), style = MaterialTheme.typography.titleMedium)
+    Spacer(Modifier.height(4.dp))
+    Text(stringResource(R.string.settings_accent), style = MaterialTheme.typography.titleSmall)
     Spacer(Modifier.height(4.dp))
     Text(
         stringResource(R.string.settings_accent_description),
@@ -234,25 +261,27 @@ private fun RunDeviceSettings(
     lockScreenControls: Boolean,
     onLockScreenControlsChanged: (Boolean) -> Unit
 ) {
-    RunSwitchSetting(
-        title = stringResource(R.string.run_auto_pause_setting),
-        description = stringResource(R.string.run_auto_pause_description),
-        checked = autoPauseEnabled,
-        onCheckedChange = onAutoPauseChanged
-    )
-    RunSwitchSetting(
-        title = stringResource(R.string.run_keep_screen_awake_setting),
-        description = stringResource(R.string.run_keep_screen_awake_description),
-        checked = keepScreenAwake,
-        onCheckedChange = onKeepScreenAwakeChanged
-    )
-    RunScreenDimTimeoutSetting(
-        timeoutMs = screenDimTimeoutMs,
-        enabled = keepScreenAwake,
-        onTimeoutSelected = onScreenDimTimeoutChanged
-    )
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        RunSwitchSetting(
+            title = stringResource(R.string.run_auto_pause_setting),
+            description = stringResource(R.string.run_auto_pause_description),
+            checked = autoPauseEnabled,
+            onCheckedChange = onAutoPauseChanged
+        )
+        RunSwitchSetting(
+            title = stringResource(R.string.run_keep_screen_awake_setting),
+            description = stringResource(R.string.run_keep_screen_awake_description),
+            checked = keepScreenAwake,
+            onCheckedChange = onKeepScreenAwakeChanged
+        )
+        RunScreenDimTimeoutSetting(
+            timeoutMs = screenDimTimeoutMs,
+            enabled = keepScreenAwake,
+            onTimeoutSelected = onScreenDimTimeoutChanged
+        )
         RunLockScreenControlsSetting(lockScreenControls, onLockScreenControlsChanged)
         RunCrashRecoverySetting()
+    }
 }
 
 @Composable
@@ -327,20 +356,22 @@ private fun RunSwitchSetting(
     onCheckedChange: (Boolean) -> Unit,
     enabled: Boolean = true
 ) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, modifier = Modifier.weight(1f))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            enabled = enabled,
-            modifier = Modifier.semantics { contentDescription = title }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(title, modifier = Modifier.weight(1f))
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                enabled = enabled,
+                modifier = Modifier.semantics { contentDescription = title }
+            )
+        }
+        Text(
+            description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
-    Text(
-        description,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
 }
 
 @Composable

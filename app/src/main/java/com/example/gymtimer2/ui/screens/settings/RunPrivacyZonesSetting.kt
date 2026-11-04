@@ -55,7 +55,7 @@ internal fun RunPrivacyZonesSetting(
     var editingZone by remember { mutableStateOf<RunPrivacyZone?>(null) }
     var deletingZone by remember { mutableStateOf<RunPrivacyZone?>(null) }
 
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp)) {
+    Column(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.run_privacy_zones_setting), Modifier.weight(1f))
             TextButton(onClick = { managerVisible = true }) {

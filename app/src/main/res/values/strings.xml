@@ -459,6 +459,11 @@
     <string name="settings_dark_theme">Escuro</string>
     <string name="settings_accent">Cor de destaque</string>
     <string name="settings_accent_description">Escolha a cor dos controles e ações principais.</string>
+    <string name="settings_run_units_section">Unidades</string>
+    <string name="settings_run_privacy_section">Privacidade do percurso</string>
+    <string name="settings_run_metrics_section">Métricas da corrida</string>
+    <string name="settings_run_guidance_section">Alertas e navegação</string>
+    <string name="settings_run_device_section">Tela e dispositivo</string>
     <string name="accent_purple">Roxo</string>
     <string name="accent_indigo">Índigo</string>
     <string name="accent_blue">Azul</string>

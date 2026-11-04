@@ -6,9 +6,11 @@ import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -23,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.net.Uri
@@ -139,7 +143,6 @@ internal fun RunPreparationScreen(
         ?.let(RunActivityFormatting::displayTitle)
         ?: screenState.plannedRoutes.firstOrNull { it.id == screenState.selectedRouteId }?.name
     val selectedRouteKey = screenState.selectedRouteRunId?.let { "run:$it" } ?: screenState.selectedRouteId?.let { "gpx:$it" }
-    val panelBottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + PREPARATION_PANEL_HEIGHT
     val closePreparation = {
         dialogs.activityType.value = RunActivityType.RUN
         screenActions.onBack()
@@ -148,7 +151,6 @@ internal fun RunPreparationScreen(
     RunPreparationMapAndPanel(
         modifier = modifier,
         historyHeatmapCells = screenState.historyHeatmapCells,
-        panelBottomPadding = panelBottomPadding,
         selectedRouteTitle = selectedRouteTitle,
         plannedPoints = screenState.plannedPoints,
         selectedRouteKey = selectedRouteKey,
@@ -383,7 +385,6 @@ private fun RunPreparationWorkoutTemplatesOverlay(
 private fun RunPreparationMapAndPanel(
     modifier: Modifier,
     historyHeatmapCells: List<RunHeatmapCell>,
-    panelBottomPadding: Dp,
     selectedRouteTitle: String?,
     plannedPoints: List<RoutePoint>,
     selectedRouteKey: String?,
@@ -406,14 +407,24 @@ private fun RunPreparationMapAndPanel(
     onEditActivityType: () -> Unit,
     onStart: () -> Unit
 ) {
-    Box(modifier.fillMaxSize()) {
+    var panelHeightPx by remember { mutableIntStateOf(0) }
+    val navigationInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val measuredPanelHeight = with(LocalDensity.current) { panelHeightPx.toDp() }
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val maxPanelHeight = maxHeight * if (maxWidth > maxHeight) {
+            LANDSCAPE_PANEL_MAX_HEIGHT_FRACTION
+        } else {
+            PORTRAIT_PANEL_MAX_HEIGHT_FRACTION
+        }
+        val mapBottomPadding = measuredPanelHeight.takeIf { panelHeightPx > 0 }
+            ?: minOf(maxPanelHeight, navigationInset + INITIAL_PANEL_HEIGHT_ESTIMATE)
         RunMap(
             points = emptyList(),
             historyHeatmapCells = historyHeatmapCells,
             followLatestPoint = false,
             modifier = Modifier.fillMaxSize(),
             shape = RectangleShape,
-            bottomPadding = panelBottomPadding,
+            bottomPadding = mapBottomPadding,
             showRecenterControl = true,
             showRouteOverviewControl = selectedRouteTitle != null,
             onInitialLocationChanged = onInitialLocationChanged,
@@ -443,6 +454,8 @@ private fun RunPreparationMapAndPanel(
             onEditActivityType = onEditActivityType,
             onStart = onStart,
             modifier = Modifier.align(Alignment.BottomCenter)
+                .heightIn(max = maxPanelHeight)
+                .onSizeChanged { panelHeightPx = it.height }
         )
     }
 }
@@ -500,4 +513,6 @@ internal fun dispatchRunStart(
     if (isBatterySaverEnabled) onShowBatterySaverWarning() else onStart(activityType)
 }
 
-private val PREPARATION_PANEL_HEIGHT = 490.dp
+private const val PORTRAIT_PANEL_MAX_HEIGHT_FRACTION = 0.72f
+private const val LANDSCAPE_PANEL_MAX_HEIGHT_FRACTION = 0.62f
+private val INITIAL_PANEL_HEIGHT_ESTIMATE = 490.dp
