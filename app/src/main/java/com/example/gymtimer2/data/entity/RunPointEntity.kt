@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.gymtimer2.domain.model.RunPointModel
 
 @Entity(
     tableName = "run_points",
@@ -40,5 +41,37 @@ data class RunPointEntity(
     val accuracyMeters: Float,
     /** Índice do trecho, usado para não ligar pontos separados por pausa. */
     @ColumnInfo(name = "segment_index")
-    val segmentIndex: Int
+    val segmentIndex: Int,
+    @ColumnInfo(name = "altitude_meters") val altitudeMeters: Double? = null,
+    @ColumnInfo(name = "vertical_accuracy_meters") val verticalAccuracyMeters: Float? = null,
+    /** Velocidade reportada pelo GPS em metros por segundo. */
+    @ColumnInfo(name = "speed_meters_per_second") val speedMetersPerSecond: Float? = null,
+    /** Margem de erro da velocidade, quando o Android a informa. */
+    @ColumnInfo(name = "speed_accuracy_meters_per_second") val speedAccuracyMetersPerSecond: Float? = null,
+    /** Cadência recebida do sensor de passos, em passos por minuto. */
+    @ColumnInfo(name = "cadence_steps_per_minute") val cadenceStepsPerMinute: Int? = null,
+    @ColumnInfo(name = "is_filtered", defaultValue = "0") val isFiltered: Boolean = false,
+    /** Tempo monotônico do GPS, nulo em pontos preservados de versões anteriores. */
+    @ColumnInfo(name = "elapsed_realtime_ms") val elapsedRealtimeMs: Long? = null,
+    /** Tempo ativo acumulado quando a posição foi capturada, nulo em registros antigos. */
+    @ColumnInfo(name = "active_duration_ms") val activeDurationMs: Long? = null
+)
+
+/** Converte uma leitura GPS persistida para o modelo do domínio. */
+fun RunPointEntity.toModel() = RunPointModel(
+    id = id,
+    runId = runId,
+    latitude = latitude,
+    longitude = longitude,
+    recordedAtEpochMs = recordedAtEpochMs,
+    accuracyMeters = accuracyMeters,
+    segmentIndex = segmentIndex,
+    altitudeMeters = altitudeMeters,
+    verticalAccuracyMeters = verticalAccuracyMeters,
+    speedMetersPerSecond = speedMetersPerSecond,
+    speedAccuracyMetersPerSecond = speedAccuracyMetersPerSecond,
+    cadenceStepsPerMinute = cadenceStepsPerMinute,
+    isFiltered = isFiltered,
+    elapsedRealtimeMs = elapsedRealtimeMs,
+    activeDurationMs = activeDurationMs
 )

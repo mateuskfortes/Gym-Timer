@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,6 +21,7 @@ import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.RunModel
 import com.example.gymtimer2.domain.model.RunStatus
 import com.example.gymtimer2.ui.screens.runs.format.RunFormatting
+import com.example.gymtimer2.ui.screens.runs.format.RunActivityFormatting
 import com.example.gymtimer2.ui.components.PrimaryButton
 import com.example.gymtimer2.ui.screens.runs.components.RunMetricsRow
 import com.example.gymtimer2.ui.screens.runs.notifications.openRunNotificationSettings
@@ -31,16 +33,23 @@ internal fun ActiveRunCard(run: RunModel, onOpen: () -> Unit) {
     val context = LocalContext.current
     val notificationsEnabled = rememberRunNotificationsEnabled()
     Card(
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                text = RunFormatting.statusLabel(run.status),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Text(
+                    text = RunActivityFormatting.statusLabel(run.status),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
             RunMetricsRow(run)
             PrimaryButton(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.run_open_active_action))

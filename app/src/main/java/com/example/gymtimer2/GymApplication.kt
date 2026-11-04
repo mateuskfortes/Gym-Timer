@@ -7,6 +7,7 @@ import org.maplibre.android.MapLibre
 import org.maplibre.android.module.http.HttpRequestUtil
 import com.example.gymtimer2.data.AppContainer
 import com.example.gymtimer2.player.MusicPlayerManager
+import com.example.gymtimer2.ui.screens.runs.tracking.RunCrashRecovery
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import java.io.File
@@ -22,6 +23,7 @@ class GymApplication : Application() {
         container = AppContainer(this)
         musicPlayerManager = MusicPlayerManager(this)
         initializeMap()
+        RunCrashRecovery.install(this)
     }
 
     /** Configura o MapLibre e um cache HTTP com User-Agent do aplicativo. */

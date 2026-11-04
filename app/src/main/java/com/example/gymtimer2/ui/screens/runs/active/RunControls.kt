@@ -37,7 +37,7 @@ internal fun RunControls(
                 Text(stringResource(R.string.run_finish_action), modifier = Modifier.padding(start = 6.dp))
             }
         }
-        RunStatus.PAUSED, RunStatus.INTERRUPTED -> Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        RunStatus.PAUSED, RunStatus.AUTO_PAUSED, RunStatus.INTERRUPTED -> Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             PrimaryButton(onClick = onResume, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
                 Text(stringResource(R.string.run_resume_action), modifier = Modifier.padding(start = 6.dp))

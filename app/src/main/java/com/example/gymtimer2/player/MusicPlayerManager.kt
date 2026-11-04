@@ -25,17 +25,21 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 private const val PLAYBACK_PROGRESS_INTERVAL_MS = 250L
+private const val FOCUS_DUCK_VOLUME = 0.2f
 
 class MusicPlayerManager(
     private val context: Context
 ) {
     private var mediaPlayer: MediaPlayer? = null
     private var isPrepared = false
+    private var isDucked = false
+    private var currentPlayerVolume = 1f
     val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private var audioFocusRequest: AudioFocusRequest? = null
     private val audioFocusListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {
+                setDucked(false)
                 if (isPrepared) {
                     mediaPlayer?.let { player ->
                         runCatching { player.start() }
@@ -45,8 +49,8 @@ class MusicPlayerManager(
                 }
             }
             AudioManager.AUDIOFOCUS_LOSS,
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT,
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                setDucked(false)
                 if (isPrepared) {
                     mediaPlayer?.let { player ->
                         runCatching { player.pause() }
@@ -55,6 +59,7 @@ class MusicPlayerManager(
                     }
                 }
             }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> setDucked(true)
         }
     }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -133,7 +138,7 @@ class MusicPlayerManager(
                 (safeStartAtMs + limitMs).coerceAtMost(durationMs)
             }
             player.seekTo(safeStartAtMs)
-            player.setVolume(0f, 0f)
+            setPlayerVolume(player, 0f)
             audioManager.setStreamVolume(
                 AudioManager.STREAM_MUSIC,
                 volume?.toInt() ?: (previousVolume ?: 0f).toInt(),
@@ -148,7 +153,7 @@ class MusicPlayerManager(
 
     private fun startFadeIn(player: MediaPlayer, durationMs: Int) {
         if (durationMs <= 0) {
-            player.setVolume(1f, 1f)
+            setPlayerVolume(player, 1f)
             return
         }
 
@@ -158,10 +163,10 @@ class MusicPlayerManager(
             for (step in 1..steps) {
                 if (!isActive || mediaPlayer !== player) break
                 val volume = (step * stepMs).toFloat() / durationMs
-                player.setVolume(volume.coerceIn(0f, 1f), volume.coerceIn(0f, 1f))
+                setPlayerVolume(player, volume.coerceIn(0f, 1f))
                 delay(stepMs)
             }
-            if (mediaPlayer === player) player.setVolume(1f, 1f)
+            if (mediaPlayer === player) setPlayerVolume(player, 1f)
             fadeInJob = null
         }
     }
@@ -229,6 +234,23 @@ class MusicPlayerManager(
             volume.toInt().coerceIn(0, maxVolume),
             0
         )
+    }
+
+    private fun setDucked(ducked: Boolean) {
+        if (isDucked == ducked) return
+        isDucked = ducked
+        if (!isPrepared) return
+
+        mediaPlayer?.let { player ->
+            runCatching { setPlayerVolume(player, currentPlayerVolume) }
+                .onFailure { stopInternal() }
+        }
+    }
+
+    private fun setPlayerVolume(player: MediaPlayer, volume: Float) {
+        currentPlayerVolume = volume
+        val adjustedVolume = musicVolumeForAudioFocus(volume, isDucked)
+        player.setVolume(adjustedVolume, adjustedVolume)
     }
 
     private fun requestAudioFocus(): Boolean {
@@ -302,6 +324,8 @@ class MusicPlayerManager(
         val player = mediaPlayer
         mediaPlayer = null
         isPrepared = false
+        isDucked = false
+        currentPlayerVolume = 1f
         runCatching { player?.release() }
 
         delayedPlayerJob?.cancel()
@@ -345,3 +369,6 @@ class MusicPlayerManager(
         }
     }
 }
+
+internal fun musicVolumeForAudioFocus(volume: Float, shouldDuck: Boolean): Float =
+    (volume * if (shouldDuck) FOCUS_DUCK_VOLUME else 1f).coerceIn(0f, 1f)

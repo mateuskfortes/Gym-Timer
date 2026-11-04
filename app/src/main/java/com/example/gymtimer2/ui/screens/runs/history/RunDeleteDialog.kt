@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import com.example.gymtimer2.R
 import com.example.gymtimer2.domain.model.RunModel
 import com.example.gymtimer2.ui.screens.runs.format.RunFormatting
+import com.example.gymtimer2.ui.screens.runs.format.RunActivityFormatting
 
 /** Identifica a corrida e exige confirmação antes de excluir a sessão e o percurso. */
 @Composable
@@ -17,7 +18,7 @@ internal fun RunDeleteDialog(run: RunModel, onConfirm: () -> Unit, onDismiss: ()
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.run_delete_title)) },
         text = {
-            Text(stringResource(R.string.run_delete_message, RunFormatting.displayTitle(run)))
+            Text(stringResource(R.string.run_delete_message, RunActivityFormatting.displayTitle(run)))
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {

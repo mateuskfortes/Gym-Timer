@@ -2,6 +2,25 @@ package com.example.gymtimer2.domain.model
 
 enum class ThemeMode { LIGHT, DARK }
 
+enum class RunStartEndHideDistance(val meters: Int) {
+    NONE(0),
+    METERS_200(200),
+    METERS_400(400),
+    METERS_600(600),
+    METERS_800(800),
+    METERS_1000(1_000),
+    METERS_1200(1_200),
+    METERS_1400(1_400),
+    METERS_1600(1_600);
+
+    companion object {
+        fun fromMeters(meters: Int): RunStartEndHideDistance =
+            entries.firstOrNull { it.meters == meters } ?: NONE
+    }
+}
+
+const val DEFAULT_RUN_SCREEN_DIM_TIMEOUT_MS = 30_000L
+
 enum class AccentColor(val lightArgb: Int, val darkArgb: Int) {
     PURPLE(0xFF67419B.toInt(), 0xFFB594E3.toInt()),
     INDIGO(0xFF414FA0.toInt(), 0xFFA9B4FF.toInt()),
@@ -26,5 +45,24 @@ enum class AccentColor(val lightArgb: Int, val darkArgb: Int) {
 
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.LIGHT,
-    val accentColor: AccentColor = AccentColor.PURPLE
-)
+    val accentColor: AccentColor = AccentColor.PURPLE,
+    val runDistanceUnit: RunDistanceUnit = RunDistanceUnit.METRIC,
+    val runOffRouteAlertsEnabled: Boolean = true,
+    val runOffRouteNotificationsEnabled: Boolean = true,
+    val runAutoPause: Boolean = false,
+    val runKeepScreenAwake: Boolean = false,
+    val runScreenDimTimeoutMs: Long = DEFAULT_RUN_SCREEN_DIM_TIMEOUT_MS,
+    val runShowControlsOnLockScreen: Boolean = false,
+    val runManualLapsEnabled: Boolean = false,
+    val runStepRateSensorEnabled: Boolean = true,
+    val runLiveSegmentsEnabled: Boolean = true,
+    val runDisplayAllTurnCues: Boolean = false,
+    val runUpcomingTurnCueCount: Int = 1,
+    val runBodyMassKg: Double? = null,
+    val runWeatherEnabled: Boolean = false,
+    val runTemperatureUnit: RunTemperatureUnit = RunTemperatureUnit.CELSIUS,
+    val runStartEndHideDistance: RunStartEndHideDistance = RunStartEndHideDistance.NONE
+) {
+    val runRouteNotificationsEnabled: Boolean
+        get() = runOffRouteAlertsEnabled && runOffRouteNotificationsEnabled
+}

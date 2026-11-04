@@ -72,11 +72,35 @@ class RunMapCameraStateTest {
         assertEquals(Action.CENTER_WITHOUT_ZOOM, state.nextAction(true, true, false))
     }
 
+    /** O enquadramento da rota permanece estável até a pessoa centralizar novamente. */
+    @Test
+    fun routeOverviewSuspendsAutomaticFollowingUntilRecentered() {
+        val state = initializedState()
+        state.onRouteOverview()
+
+        assertEquals(Action.KEEP_VIEWPORT, state.nextAction(true, true, false))
+        state.onRecenter()
+        assertEquals(Action.CENTER_WITHOUT_ZOOM, state.nextAction(true, true, false))
+    }
+
     /** O histórico permanece no enquadramento escolhido após carregar a rota inicialmente. */
     @Test
     fun savedRouteUpdatesDoNotRefitViewport() {
         val state = initializedState()
         assertEquals(Action.KEEP_VIEWPORT, state.nextAction(false, true, false))
+    }
+
+    /** Restores the saved camera mode and keeps manual exploration until recentering. */
+    @Test
+    fun restoresSavedViewportAndFollowingMode() {
+        val state = RunMapCameraState()
+
+        assertEquals(Action.RESTORE_SAVED_VIEWPORT, state.nextAction(true, true, false, hasSavedViewport = true))
+        state.restoreViewport(followsUser = false)
+        assertEquals(Action.KEEP_VIEWPORT, state.nextAction(true, true, true))
+
+        state.onRecenter()
+        assertEquals(Action.CENTER_WITHOUT_ZOOM, state.nextAction(true, true, false))
     }
 
     /** Abrir ou recolher o painel com acompanhamento ativo não deve aproximar a câmera. */

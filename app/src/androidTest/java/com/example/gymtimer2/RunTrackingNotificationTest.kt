@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.first
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertEquals
 import com.example.gymtimer2.domain.model.RunStatus
+import com.example.gymtimer2.domain.model.RunSaveDetails
 import com.example.gymtimer2.ui.screens.runs.tracking.RunTrackingService
 import com.example.gymtimer2.ui.screens.runs.tracking.RunTrackingServiceController
 import kotlinx.coroutines.runBlocking
@@ -47,19 +48,47 @@ class RunTrackingNotificationTest {
             awaitNotification(manager, R.string.run_notification_running)
             assertTrue(notification(manager).flags and Notification.FLAG_ONGOING_EVENT != 0)
             assertNotNull(notification(manager).contentIntent)
+            composeRule.waitUntil(10_000) {
+                notification(manager).extras.getCharSequence(Notification.EXTRA_TEXT)?.contains(" km · ") == true
+            }
+            assertEquals(
+                context.getString(R.string.run_activity_type),
+                notification(manager).extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString()
+            )
             composeRule.waitUntil(10_000) { runBlocking { repository.getRun(id)?.status == RunStatus.RUNNING } }
-            composeRule.runOnIdle { controller.pause(id) }
+            composeRule.runOnIdle { controller.lap(id) }
+            composeRule.waitUntil(10_000) { runBlocking { repository.observeLaps(id).first().size == 1 } }
+            tapNotificationAction(manager, R.string.run_notification_action_pause)
             awaitNotification(manager, R.string.run_notification_paused)
             composeRule.waitUntil(10_000) { runBlocking { repository.getRun(id)?.status == RunStatus.PAUSED } }
-            composeRule.runOnIdle { controller.resume(id) }
+            tapNotificationAction(manager, R.string.run_notification_action_resume)
             awaitNotification(manager, R.string.run_notification_running)
             composeRule.waitUntil(10_000) { runBlocking { repository.getRun(id)?.status == RunStatus.RUNNING } }
-            composeRule.runOnIdle { controller.finish(id, "Corrida no parque") }
+            composeRule.runOnIdle {
+                controller.finish(
+                    id,
+                    RunSaveDetails(
+                        "Corrida no parque",
+                        "Deslocamento de teste",
+                        true,
+                        8,
+                        gearName = "Tênis de trilha",
+                        privateNotes = "Não sincronizar"
+                    )
+                )
+            }
             composeRule.waitUntil(10_000) { manager.activeNotifications.none {
-                it.notification.extras.getString(Notification.EXTRA_TITLE) == context.getString(R.string.run_notification_title)
+                it.notification.extras.getCharSequence(Notification.EXTRA_TITLE)
+                    ?.startsWith(context.getString(R.string.run_notification_title)) == true
             } }
             composeRule.waitUntil(10_000) { runBlocking { repository.getRun(id)?.status == RunStatus.COMPLETED } }
-            assertEquals("Corrida no parque", runBlocking { repository.getRun(id)?.title })
+            val savedRun = runBlocking { repository.getRun(id) }
+            assertEquals("Corrida no parque", savedRun?.title)
+            assertEquals("Deslocamento de teste", savedRun?.description)
+            assertTrue(savedRun?.isCommute == true)
+            assertEquals(8, savedRun?.perceivedExertion)
+            assertEquals("Tênis de trilha", savedRun?.gearName)
+            assertEquals("Não sincronizar", savedRun?.privateNotes)
         } finally {
             context.stopService(Intent(context, RunTrackingService::class.java))
             runBlocking {
@@ -86,7 +115,8 @@ class RunTrackingNotificationTest {
             composeRule.waitUntil(10_000) { runBlocking { repository.getRun(id) == null } }
             composeRule.waitUntil(10_000) { !RunTrackingService.isTracking(id) }
             composeRule.waitUntil(10_000) { manager.activeNotifications.none {
-                it.notification.extras.getString(Notification.EXTRA_TITLE) == context.getString(R.string.run_notification_title)
+                it.notification.extras.getCharSequence(Notification.EXTRA_TITLE)
+                    ?.startsWith(context.getString(R.string.run_notification_title)) == true
             } }
             assertNull(runBlocking { repository.getRun(id) })
             assertEquals(0, runBlocking { repository.observePoints(id).first().size })
@@ -103,13 +133,22 @@ class RunTrackingNotificationTest {
     private fun awaitNotification(manager: NotificationManager, textResource: Int) {
         composeRule.waitUntil(10_000) {
             manager.activeNotifications.any {
-                it.notification.extras.getString(Notification.EXTRA_TEXT) == composeRule.activity.getString(textResource)
+                it.notification.extras.getCharSequence(Notification.EXTRA_TEXT)
+                    ?.contains(composeRule.activity.getString(textResource)) == true
             }
         }
     }
 
+    /** Envia a ação apresentada pelo serviço para cobrir o mesmo caminho do botão do Android. */
+    private fun tapNotificationAction(manager: NotificationManager, labelResource: Int) {
+        val label = composeRule.activity.getString(labelResource)
+        val action = requireNotNull(notification(manager).actions).first { it.title == label }
+        action.actionIntent.send()
+    }
+
     /** Localiza somente a notificação do serviço de corrida. */
     private fun notification(manager: NotificationManager): Notification = manager.activeNotifications.first {
-        it.notification.extras.getString(Notification.EXTRA_TITLE) == composeRule.activity.getString(R.string.run_notification_title)
+        it.notification.extras.getCharSequence(Notification.EXTRA_TITLE)
+            ?.startsWith(composeRule.activity.getString(R.string.run_notification_title)) == true
     }.notification
 }

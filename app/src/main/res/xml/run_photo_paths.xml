@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path name="run_photos" path="run_photos/" />
+    <cache-path name="run_share_cards" path="run_share_cards/" />
+</paths>

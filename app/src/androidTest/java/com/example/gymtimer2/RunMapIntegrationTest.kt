@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.espresso.Espresso.onView
@@ -24,6 +26,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.gymtimer2.domain.model.RunModel
 import com.example.gymtimer2.domain.model.RunPointModel
+import com.example.gymtimer2.domain.model.RunHeatmapCell
 import com.example.gymtimer2.domain.model.RunStatus
 import com.example.gymtimer2.ui.screens.runs.history.RunDetailsScreen
 import com.example.gymtimer2.ui.screens.runs.map.RunMap
@@ -32,6 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.abs
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,6 +44,8 @@ import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
+import org.maplibre.geojson.LineString
+import org.maplibre.geojson.Point
 
 /** Verifica a câmera e o botão sobre um MapView real, incluindo posições recebidas após o carregamento. */
 @RunWith(AndroidJUnit4::class)
@@ -64,6 +71,79 @@ class RunMapIntegrationTest {
         composeRule.runOnIdle { points.value = listOf(samplePoint()) }
         awaitCameraAt(map, LatLng(-23.55, -46.63))
         composeRule.runOnIdle { assertEquals(17.0, map.cameraPosition.zoom, 0.01) }
+    }
+
+    /** A late first GPS point must not clear the layer chosen while waiting for location. */
+    @Test
+    fun selectedMapLayerSurvivesFirstGpsPoint() {
+        val points = mutableStateOf(emptyList<RunPointModel>())
+        composeRule.setContent {
+            GymTimerTheme {
+                RunMap(
+                    points = points.value,
+                    weeklyHeatmapCells = listOf(RunHeatmapCell(-23.55, -46.63, 1L)),
+                    followLatestPoint = true,
+                    onPoiViewportChanged = {},
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        awaitMapStyle()
+
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.run_map_layers))
+            .performClick()
+        val weeklyLayer = composeRule.activity.getString(R.string.run_map_layer_weekly_activity)
+        composeRule.onNodeWithText(weeklyLayer).performClick()
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.run_map_layers))
+            .performClick()
+        val poiLayer = composeRule.activity.getString(R.string.run_map_layer_pois)
+        composeRule.onNodeWithText(poiLayer).performClick()
+        composeRule.runOnIdle { points.value = listOf(samplePoint()) }
+
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.run_map_layers))
+            .performClick()
+        composeRule.onNodeWithText(weeklyLayer).assertIsSelected()
+        composeRule.onNodeWithText(poiLayer).assertIsSelected()
+    }
+
+    /** Pontos GPS filtrados continuam salvos, mas não aparecem na linha da rota. */
+    @Test
+    fun filteredGpsPointIsNotDrawnInRecordedRoute() {
+        val points = listOf(
+            samplePoint(),
+            samplePoint(latitude = -23.56, longitude = -46.64).copy(id = 2L, isFiltered = true),
+            samplePoint(latitude = -23.57).copy(id = 3L)
+        )
+        composeRule.setContent {
+            GymTimerTheme {
+                RunMap(
+                    points = points,
+                    followLatestPoint = true,
+                    showRecenterControl = false,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        val map = awaitMapStyle()
+        composeRule.runOnIdle {
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(-23.56, -46.635), 14.0))
+        }
+        val renderedCoordinates = AtomicReference<List<Point>>(emptyList())
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.runOnIdle {
+                val view = checkNotNull(composeRule.activity.window.decorView.findMapView())
+                renderedCoordinates.set(
+                    map.queryRenderedFeatures(
+                        RectF(0f, 0f, view.width.toFloat(), view.height.toFloat()), "run-route-layer"
+                    ).flatMap { (it.geometry() as? LineString)?.coordinates().orEmpty() }
+                )
+            }
+            renderedCoordinates.get().isNotEmpty()
+        }
+
+        val coordinates = renderedCoordinates.get().distinctBy { it.latitude() to it.longitude() }
+        assertTrue(coordinates.any { abs(it.latitude() + 23.57) < 0.0001 && abs(it.longitude() + 46.63) < 0.0001 })
+        assertFalse(coordinates.any { abs(it.longitude() + 46.64) < 0.0001 })
     }
 
     /** Zoom baixo não deve ocultar o botão só porque o deslocamento ocupa poucos pixels. */
@@ -144,6 +224,67 @@ class RunMapIntegrationTest {
         composeRule.runOnIdle { assertEquals(14.0, map.cameraPosition.zoom, 0.01) }
     }
 
+    /** A visão geral enquadra as rotas e mantém a câmera parada até a pessoa centralizar. */
+    @Test
+    fun routeOverviewFitsRoutesAndSuspendsGpsFollowing() {
+        val points = mutableStateOf(listOf(samplePoint()))
+        val plannedPoints = listOf(
+            samplePoint(),
+            samplePoint(latitude = -23.60).copy(id = 2L)
+        )
+        composeRule.setContent {
+            GymTimerTheme {
+                RunMap(
+                    points = points.value,
+                    plannedPoints = plannedPoints,
+                    plannedRouteKey = "route:1",
+                    followLatestPoint = true,
+                    showRecenterControl = true,
+                    showRouteOverviewControl = true,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        val map = awaitMapStyle()
+        awaitCameraAt(map, LatLng(-23.55, -46.63))
+
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.getString(R.string.run_map_route_overview)
+        ).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            var routeIsFramed = false
+            composeRule.runOnIdle {
+                val target = map.cameraPosition.target
+                routeIsFramed = target != null &&
+                    target.distanceTo(LatLng(-23.575, -46.63)) < 1_000.0 && map.cameraPosition.zoom < 17.0
+            }
+            routeIsFramed
+        }
+
+        val overviewTarget = AtomicReference<LatLng>()
+        var overviewZoom = 0.0
+        composeRule.runOnIdle {
+            overviewTarget.set(checkNotNull(map.cameraPosition.target))
+            overviewZoom = map.cameraPosition.zoom
+            points.value = listOf(samplePoint(latitude = -23.54).copy(id = 2L))
+        }
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            var viewportPreserved = false
+            composeRule.runOnIdle {
+                val target = checkNotNull(map.cameraPosition.target)
+                viewportPreserved = target.distanceTo(overviewTarget.get()) < 1.0 &&
+                    abs(map.cameraPosition.zoom - overviewZoom) < 0.01
+            }
+            viewportPreserved
+        }
+
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.getString(R.string.run_map_recenter)
+        ).performClick()
+        awaitCameraAt(map, LatLng(-23.54, -46.63))
+        composeRule.runOnIdle { assertEquals(17.0, map.cameraPosition.zoom, 0.01) }
+    }
+
     /** O histórico deve enquadrar e renderizar a rota dentro do cartão rolável. */
     @Test
     fun historyRendersSavedRoute() {
@@ -199,6 +340,7 @@ class RunMapIntegrationTest {
                         currentSegment = 0
                     ),
                     points = points,
+                    stepRateSamples = emptyList(),
                     onDelete = {},
                     onBack = {}
                 )
@@ -262,11 +404,11 @@ class RunMapIntegrationTest {
     }
 
     /** Usa coordenadas de teste fixas e não acessa dados reais de corrida. */
-    private fun samplePoint(latitude: Double = -23.55) = RunPointModel(
+    private fun samplePoint(latitude: Double = -23.55, longitude: Double = -46.63) = RunPointModel(
         id = 1L,
         runId = 1L,
         latitude = latitude,
-        longitude = -46.63,
+        longitude = longitude,
         recordedAtEpochMs = 1_700_000_000_000L,
         accuracyMeters = 4f,
         segmentIndex = 0

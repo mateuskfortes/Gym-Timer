@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 
 /** Identifica o mesmo canal no serviço e no atalho para as configurações do Android. */
 internal const val RUN_NOTIFICATION_CHANNEL_ID = "run_tracking"
+internal const val RUN_ROUTE_ALERT_NOTIFICATION_CHANNEL_ID = "run_route_alerts"
 
 /** Reconsulta a permissão e o canal quando a pessoa retorna das configurações. */
 @Composable
